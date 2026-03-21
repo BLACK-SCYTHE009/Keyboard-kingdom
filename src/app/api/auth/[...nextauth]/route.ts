@@ -20,12 +20,7 @@ const handler = NextAuth({
         });
 
         if (!user) {
-          // Auto sign-up if the user doesn't exist to make it seamless
-          const hashedPassword = await bcrypt.hash(credentials.password, 10);
-          user = await prisma.user.create({
-            data: { username: credentials.username, password: hashedPassword }
-          });
-          return { id: user.id, name: user.username };
+          return null; // Reject if user doesn't exist
         }
 
         // Verify password
@@ -38,6 +33,17 @@ const handler = NextAuth({
   ],
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET || "super-secret-keyboard-kingdom-key",
+  cookies: {
+    sessionToken: {
+      name: 'keyboard-kingdom.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production"
+      }
+    }
+  },
   callbacks: {
     async session({ session, token }) {
       if (session?.user && token.sub) {

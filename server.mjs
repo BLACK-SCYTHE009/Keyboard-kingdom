@@ -2,7 +2,9 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
@@ -79,12 +81,42 @@ app.prepare().then(() => {
       }, lobby.monster.speed);
   }
 
-  function defeatMonster(lobbyId) {
+  async function defeatMonster(lobbyId) {
       const lobby = lobbies[lobbyId];
       if (!lobby) return;
       if (lobby.attackTimer) clearTimeout(lobby.attackTimer);
       
-      io.to(lobbyId).emit('monster_defeated', { name: lobby.monster.name, reward: lobby.monster.reward });
+      const reward = lobby.monster.reward;
+      
+      // Update Prisma users
+      for (const p of Object.values(lobby.players)) {
+          if (p.isAlive && p.dbId) {
+              try {
+                  const dbUser = await prisma.user.findUnique({ where: { id: p.dbId } });
+                  if (dbUser) {
+                      const newXp = dbUser.xp + reward.xp;
+                      const nextLevelXp = Math.floor(100 * Math.pow(1.5, dbUser.level - 1));
+                      let newLevel = dbUser.level;
+                      if (newXp >= nextLevelXp) {
+                          newLevel++;
+                      }
+                      
+                      await prisma.user.update({
+                          where: { id: p.dbId },
+                          data: { 
+                              xp: newXp, 
+                              level: newLevel 
+                          }
+                      });
+                      
+                      p.level = newLevel;
+                      p.xp = newXp;
+                  }
+              } catch (e) { console.error("Prisma Error:", e); }
+          }
+      }
+
+      io.to(lobbyId).emit('monster_defeated', { name: lobby.monster.name, reward, players: lobby.players });
       lobby.monster = null;
       lobby.levelId++;
       
@@ -100,7 +132,7 @@ app.prepare().then(() => {
     let socketLobby = null;
 
     // Lobby System
-    socket.on('join_lobby', ({ lobbyId, username }) => {
+    socket.on('join_lobby', async ({ lobbyId, username }) => {
         socketLobby = lobbyId;
         socket.join(lobbyId);
         
@@ -108,7 +140,19 @@ app.prepare().then(() => {
             lobbies[lobbyId] = { status: 'waiting', levelId: 0, monster: null, currentWord: "", players: {}, attackTimer: null };
         }
         const lobby = lobbies[lobbyId];
-        lobby.players[socket.id] = { id: socket.id, name: username || 'Player', isAlive: true };
+        
+        // Fetch DB data
+        let userData = { level: 1, xp: 0, dbId: null };
+        if (username) {
+            try {
+                const dbUser = await prisma.user.findUnique({ where: { username } });
+                if (dbUser) {
+                    userData = { level: dbUser.level, xp: dbUser.xp, dbId: dbUser.id };
+                }
+            } catch(e) {}
+        }
+
+        lobby.players[socket.id] = { id: socket.id, name: username || 'Player', isAlive: true, ...userData };
         
         console.log(`Socket ${socket.id} joined lobby ${lobbyId}`);
         io.to(lobbyId).emit('update_players', Object.values(lobby.players));
@@ -117,7 +161,8 @@ app.prepare().then(() => {
             status: lobby.status,
             monster: lobby.monster,
             currentWord: lobby.currentWord,
-            levelId: lobby.levelId
+            levelId: lobby.levelId,
+            playerData: lobby.players[socket.id]
         });
     });
 

@@ -75,6 +75,20 @@
     to { transform: translateY(-10px); }
 }
 
+.animate-shake {
+    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.animate-flash {
+    animation: flash 0.2s ease-out both;
+}
+
+@keyframes flash {
+    0% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
+    50% { filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
+    100% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
+}
+
 input {
     outline: none !important;
 }
