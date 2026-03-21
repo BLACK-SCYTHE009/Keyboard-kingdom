@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keyboard Kingdom</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'deep-purple': '#2A1B3D',
+                        'electric-cyan': '#00F0FF',
+                        'hot-pink': '#FF00AA',
+                        'toxic-green': '#39FF14',
+                        'meme-yellow': '#FFDD00'
+                    },
+                    fontFamily: {
+                        'pixel': ['"Press Start 2P"', 'cursive'],
+                        'impact': ['Impact', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts for pixel art vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-deep-purple text-white font-pixel h-screen w-screen overflow-hidden flex flex-col relative global-vibration" id="main-body">
+
+    <!-- Starry Background Canvas -->
+    <canvas id="bg-canvas" class="absolute inset-0 w-full h-full -z-10"></canvas>
+
+    <!-- Title Screen -->
+    <div id="title-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-deep-purple z-50">
+        <h1 class="text-4xl md:text-6xl text-electric-cyan mb-8 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)] text-center animate-pulse tracking-wide font-impact" style="font-family: 'Press Start 2P', cursive;">KEYBOARD KINGDOM</h1>
+        <div class="mb-12 text-meme-yellow text-sm md:text-base text-center px-4 leading-loose">
+            You are the world's worst medieval king.<br>You can only communicate by angrily smashing your keyboard.
+        </div>
+        <div class="flex flex-col gap-4 w-64">
+            <button onclick="startGame()" class="game-btn text-hot-pink border-hot-pink">PLAY</button>
+            <button onclick="alert('Type words to solve crises before the timer runs out!\nExamples:\ngo, gold, fire, cat, run, beef, yeet, tax\nKeep it between 3 and 15 letters!')" class="game-btn text-electric-cyan border-electric-cyan text-xs">HOW TO TYPE</button>
+            <button onclick="alert('Global Leaderboard currently down for maintenance.\nThe King rage-deleted the production database.')" class="game-btn text-toxic-green border-toxic-green text-xs">LEADERBOARD</button>
+        </div>
+        <div class="absolute bottom-4 right-4 text-[10px] opacity-50 text-electric-cyan">v1.0.0 (Cursed Edition)</div>
+    </div>
+
+    <!-- Game Screen (hidden initially) -->
+    <div id="game-screen" class="hidden w-full h-full flex flex-col p-2 md:p-4 gap-2 md:gap-4 relative z-10">
+        
+        <!-- Header -->
+        <header class="h-12 border-4 border-black bg-black/50 rounded flex items-center justify-between px-2 md:px-4 glow-cyan shrink-0 backdrop-blur-sm">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">👑</span>
+                <span class="text-electric-cyan text-xs md:text-sm truncate" id="king-name">King's Kingdom</span>
+            </div>
+            <div class="flex gap-4 items-center">
+                <span id="day-counter" class="text-[10px] md:text-xs">Day: 1/100</span>
+                <button id="toggle-sound" class="text-[10px] game-btn py-1 px-2 border-meme-yellow text-meme-yellow shadow-none">🔊 ON</button>
+            </div>
+        </header>
+
+        <!-- Main Content Split -->
+        <div class="flex-1 flex flex-col md:flex-row gap-2 md:gap-4 min-h-0">
+            
+            <!-- Left: Canvas Area -->
+            <div class="flex-1 border-[6px] border-black rounded relative bg-transparent game-canvas-container shadow-[0_0_20px_rgba(0,240,255,0.3)] min-h-[50%] md:min-h-0">
+                <!-- Health Floater -->
+                <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 text-hot-pink text-xs md:text-sm drop-shadow-md bg-black/70 p-2 rounded border-2 border-hot-pink">
+                    HP: <span id="health-display">100</span> ❤️
+                </div>
+                
+                <canvas id="game-canvas" class="w-full h-full object-contain md:object-fill"></canvas>
+                
+                <!-- On-screen particles overlay container -->
+                <div id="particle-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+            </div>
+
+            <!-- Right: Sidebar UI -->
+            <div class="md:w-72 flex flex-col gap-2 md:gap-4 shrink-0 overflow-y-auto w-full max-h-[40%] md:max-h-full custom-scrollbar pr-1">
+                
+                <!-- Resources -->
+                <div class="bg-black/80 border-4 border-black rounded p-3 glow-cyan">
+                    <h2 class="text-electric-cyan text-[10px] mb-2 border-b-2 border-electric-cyan pb-1">ROYAL VAULT</h2>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span>🪵 Wood</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-2 bg-gray-800 rounded overflow-hidden"><div id="bar-wood" class="h-full bg-green-400 w-0 transition-all"></div></div>
+                                <span id="res-wood" class="text-green-400 w-8 text-right">0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span>🔥 Chaos</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-2 bg-gray-800 rounded overflow-hidden"><div id="bar-chaos" class="h-full bg-red-400 w-0 transition-all"></div></div>
+                                <span id="res-chaos" class="text-red-400 w-8 text-right">0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span>🐱 Memes</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-2 bg-gray-800 rounded overflow-hidden"><div id="bar-memes" class="h-full bg-meme-yellow w-0 transition-all"></div></div>
+                                <span id="res-memes" class="text-meme-yellow w-8 text-right">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upgrades button -->
+                <button onclick="toggleShop()" class="game-btn text-meme-yellow border-meme-yellow text-[10px] md:text-xs animate-bounce py-2">🛒 ROYAL SHOP</button>
+
+                <!-- Current Crisis -->
+                <div id="crisis-card" class="bg-black/80 border-4 border-toxic-green rounded p-3 md:p-4 shadow-[0_0_15px_rgba(57,255,20,0.4)] transition-colors">
+                    <div class="text-hot-pink text-[10px] mb-1 font-impact tracking-wider" id="crisis-title">CRISIS AVERTED!</div>
+                    <div id="crisis-text" class="text-xs leading-relaxed min-h-[40px] text-white">
+                        Waiting for the next disaster...
+                    </div>
+                    <!-- Timer Bar -->
+                    <div class="w-full h-2 md:h-3 bg-gray-800 border-2 border-black rounded mt-2 relative overflow-hidden">
+                        <div id="crisis-timer-bar" class="absolute top-0 left-0 h-full bg-hot-pink w-0 ease-linear transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Typing Log -->
+                <div class="hidden md:flex flex-1 bg-black/80 border-4 border-black rounded p-3 flex-col min-h-[100px]">
+                    <div class="text-gray-400 text-[8px] mb-2 border-b border-gray-600 pb-1">ROYAL DECREE LOG</div>
+                    <div id="action-log" class="text-[10px] font-impact tracking-widest flex flex-col justify-end gap-1 flex-1 overflow-hidden">
+                        <div class="text-gray-500">Awaiting your command...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Input Area -->
+        <div class="h-16 md:h-24 flex gap-2 md:gap-4 shrink-0 transition-transform" id="input-container">
+            <!-- Typing Input field -->
+            <div class="flex-1 border-4 border-electric-cyan rounded relative bg-black shadow-[0_0_20px_rgba(0,240,255,0.5)] flex items-center px-2 md:px-6">
+                <span class="text-electric-cyan text-base md:text-xl mr-2 md:mr-4 animate-pulse">></span>
+                <input type="text" id="type-input" 
+                    class="w-full bg-transparent text-white text-base md:text-2xl font-pixel outline-none uppercase placeholder-gray-600"
+                    placeholder="TYPE..." autocomplete="off" spellcheck="false">
+                
+                <div id="input-error-flash" class="absolute inset-0 bg-red-500/50 opacity-0 pointer-events-none transition-opacity duration-100 mix-blend-screen"></div>
+                <div id="input-success-flash" class="absolute inset-0 bg-green-500/50 opacity-0 pointer-events-none transition-opacity duration-100 mix-blend-screen"></div>
+            </div>
+            <!-- Submit Button (mobile mostly, desktop uses Enter) -->
+            <button id="submit-btn" class="w-24 md:w-40 game-btn text-hot-pink border-hot-pink text-[10px] md:text-xs bg-black flex flex-col justify-center items-center py-0">
+                <span>DECREE</span>
+                <span class="text-[6px] hidden md:block mt-1 text-gray-400">(ENTER)</span>
+            </button>
+        </div>
+
+        <!-- Chaos Meter Footer -->
+        <div class="h-4 md:h-6 border-4 border-black rounded bg-black relative overflow-hidden flex items-center justify-center shrink-0">
+            <div id="chaos-meter-bar" class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-600 w-0 transition-all duration-300"></div>
+            <span class="relative z-10 text-[6px] md:text-[8px] text-white mix-blend-difference font-bold tracking-widest">CHAOS METER</span>
+        </div>
+
+    </div>
+
+    <!-- Shop Screen Overlay -->
+    <div id="shop-screen" class="hidden absolute inset-0 bg-black/95 z-40 flex flex-col items-center justify-center p-4 backdrop-blur-md">
+        <h2 class="text-2xl md:text-4xl text-meme-yellow mb-8 drop-shadow-[0_0_10px_rgba(255,221,0,0.8)] text-center">ROYAL BLACK MARKET</h2>
+        <div class="flex flex-col md:flex-row gap-4 md:gap-8 max-w-4xl w-full">
+            <div class="flex-1 border-4 border-green-400 p-4 rounded text-center bg-black/50">
+                <h3 class="text-green-400 text-xs md:text-sm mb-4">Wood Upgrades</h3>
+                <button onclick="window.buyUpgrade('dict')" class="game-btn text-[8px] border-green-400 text-green-400 w-full mb-2 shadow-none py-3">
+                    Royal Dictionary (50 Wood)<br><span class="text-[6px] text-gray-400 whitespace-normal mt-1 block">Makes sensible words give slightly less chaos.</span>
+                </button>
+            </div>
+            <div class="flex-1 border-4 border-red-400 p-4 rounded text-center bg-black/50">
+                <h3 class="text-red-400 text-xs md:text-sm mb-4">Chaos Upgrades</h3>
+                <button onclick="window.buyUpgrade('rage')" class="game-btn text-[8px] border-red-400 text-red-400 w-full mb-2 shadow-none py-3">
+                    Gold Toilet (80 Chaos)<br><span class="text-[6px] text-gray-400 whitespace-normal mt-1 block">Increases max Chaos tolerance.</span>
+                </button>
+            </div>
+            <div class="flex-1 border-4 border-meme-yellow p-4 rounded text-center bg-black/50">
+                <h3 class="text-meme-yellow text-xs md:text-sm mb-4">Meme Upgrades</h3>
+                <button onclick="window.buyUpgrade('cats')" class="game-btn text-[8px] border-meme-yellow text-meme-yellow w-full mb-2 shadow-none py-3">
+                    Cat Spawner (100 Memes)<br><span class="text-[6px] text-gray-400 whitespace-normal mt-1 block">Adds a chance for random cats to appear.</span>
+                </button>
+            </div>
+        </div>
+        <button onclick="toggleShop()" class="game-btn text-white border-white mt-8 text-xs">BACK TO THRONE</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="hidden absolute inset-0 bg-red-950/95 z-50 flex flex-col items-center justify-center p-4 text-center pb-20">
+        <h1 class="text-4xl md:text-6xl text-red-500 mb-6 font-impact tracking-widest drop-shadow-[0_0_20px_rgba(255,0,0,0.8)] animate-pulse">KINGDOM DESTROYED</h1>
+        <div id="death-reason" class="text-sm md:text-xl text-white mb-4">You accidentally pressed "delete"</div>
+        
+        <div class="p-4 bg-black border-4 border-hot-pink rounded mb-8 rotate-[-2deg] max-w-lg w-full">
+            <div class="text-[10px] text-gray-400">Final Decree:</div>
+            <div id="final-decree" class="text-xl md:text-3xl text-hot-pink my-2 font-impact break-all">"yeetlmao"</div>
+            <div class="text-[8px] text-gray-500 mt-2 text-right">Day <span id="death-day">42</span></div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+            <button onclick="location.reload()" class="game-btn text-electric-cyan border-electric-cyan text-xs">NEW REGIME</button>
+            <button onclick="shareScore()" class="game-btn text-[#1DA1F2] border-[#1DA1F2] flex items-center justify-center gap-2 text-xs">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                TWEET SHAME
+            </button>
+        </div>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="hidden absolute inset-0 bg-green-950/95 z-50 flex flex-col items-center justify-center p-4 text-center backdrop-blur-md">
+        <h1 class="text-4xl md:text-6xl text-meme-yellow mb-6 font-impact tracking-widest drop-shadow-[0_0_20px_rgba(255,221,0,0.8)]">A CENTURY OF SILLINESS</h1>
+        <div class="text-sm md:text-xl text-white mb-8 leading-loose">You somehow ruled for 100 days without deleting the kingdom! 😂</div>
+        <button onclick="location.reload()" class="game-btn text-white border-white text-xs">RETIRE IN PEACE</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
