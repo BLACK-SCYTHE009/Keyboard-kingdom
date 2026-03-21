@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  username       String    @unique
+  password       String
+  level          Int       @default(1)
+  xp             Int       @default(0)
+  createdAt      DateTime  @default(now())
+
+  friendsInitiated Friend[] @relation("friendSender")
+  friendsReceived  Friend[] @relation("friendReceiver")
+  
+  messagesSent     DirectMessage[] @relation("msgSender")
+  messagesReceived DirectMessage[] @relation("msgReceiver")
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    String   // PENDING, ACCEPTED
+  createdAt DateTime @default(now())
+
+  user   User @relation("friendSender", fields: [userId], references: [id])
+  friend User @relation("friendReceiver", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+model DirectMessage {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("msgSender", fields: [senderId], references: [id])
+  receiver User @relation("msgReceiver", fields: [receiverId], references: [id])
+}
