@@ -110,3 +110,26 @@ input {
     background: #55AA55;
     border: 2px solid #000;
 }
+
+/* Death Screen */
+@keyframes death-appear {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.death-text-glow {
+    animation: death-pulse 2s ease-in-out infinite;
+}
+
+@keyframes death-pulse {
+    0%, 100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 80px #990000; }
+    50% { text-shadow: 0 0 30px #ff3333, 0 0 60px #ff0000, 0 0 100px #cc0000; }
+}
+
+/* Level Up Flash */
+@keyframes levelup-flash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+

@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import GameClient from "@/components/GameClient";
+import { redirect } from "next/navigation";
 
 export default async function RandomLobbyPage() {
-    // Basic verification that user is signed in
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !session.user?.name) {
-        return <div className="p-8 text-red-500 font-pixel">UNAUTHORIZED. PLEASE LOGIN.</div>;
+        redirect("/");
     }
 
     return <GameClient mode="random" username={session.user.name} />;

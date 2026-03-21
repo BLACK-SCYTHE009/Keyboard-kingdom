@@ -62,6 +62,7 @@ export default function LoginScreen() {
                     type="text" 
                     placeholder="USERNAME" 
                     required 
+                    autoComplete="off"
                     value={username} onChange={e => setUsername(e.target.value)}
                     className="w-full bg-black text-white text-[10px] md:text-xs p-4 blocky-border-inner focus:outline-none" 
                 />
@@ -69,6 +70,7 @@ export default function LoginScreen() {
                     type="password" 
                     placeholder="PASSWORD" 
                     required 
+                    autoComplete="new-password"
                     value={password} onChange={e => setPassword(e.target.value)}
                     className="w-full bg-black text-white text-[10px] md:text-xs p-4 blocky-border-inner focus:outline-none" 
                 />

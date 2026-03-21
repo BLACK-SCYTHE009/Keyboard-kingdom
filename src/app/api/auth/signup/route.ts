@@ -10,6 +10,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
         }
 
+        if (password.length < 3) {
+            return NextResponse.json({ error: 'Password must be at least 3 characters' }, { status: 400 });
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { username }
         });
