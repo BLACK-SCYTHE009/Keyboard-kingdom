@@ -45,3 +45,5 @@ model DirectMessage {
   sender   User @relation("msgSender", fields: [senderId], references: [id])
   receiver User @relation("msgReceiver", fields: [receiverId], references: [id])
 }
+
+
