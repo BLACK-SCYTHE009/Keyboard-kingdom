@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════
+   KEYBOARD KINGDOM — DESIGN SYSTEM
+   UX Psychology-Driven Aesthetic
+   ═══════════════════════════════════════ */
+
 @theme {
+  /* ── Core Minecraft Palette ── */
   --color-mc-sky: #87CEEB;
   --color-mc-grass: #55AA55;
   --color-mc-dirt: #8B5A2B;
@@ -8,6 +14,28 @@
   --color-mc-wood: #A0522D;
   --color-mc-health: #FF4444;
   --color-mc-xp: #39FF14;
+
+  /* ── Warm Accent Palette (Color Psychology) ── */
+  --color-gold: #FFD700;
+  --color-gold-soft: #FFC107;
+  --color-coral: #FF6B6B;
+  --color-emerald: #50FA7B;
+  --color-royal: #BD93F9;
+  --color-ice: #8BE9FD;
+  --color-flame: #FF5555;
+}
+
+/* ─── Custom Properties ─── */
+:root {
+  --bg-dark: #0d1117;
+  --bg-dark-card: #161b22;
+  --bg-dark-surface: #21262d;
+  --glow-gold: 0 0 15px rgba(255, 215, 0, 0.4), 0 0 30px rgba(255, 215, 0, 0.1);
+  --glow-green: 0 0 15px rgba(57, 255, 20, 0.4), 0 0 30px rgba(57, 255, 20, 0.1);
+  --glow-red: 0 0 15px rgba(255, 68, 68, 0.4), 0 0 30px rgba(255, 68, 68, 0.1);
+  --glow-blue: 0 0 15px rgba(139, 233, 253, 0.3), 0 0 30px rgba(139, 233, 253, 0.1);
+  --glow-purple: 0 0 15px rgba(189, 147, 249, 0.3);
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @layer base {
@@ -17,7 +45,12 @@
   }
 }
 
+/* ═══════════════════════════════════════
+   COMPONENT UTILITIES
+   ═══════════════════════════════════════ */
+
 @layer utilities {
+  /* ── Blocky Borders (Minecraft Style) ── */
   .blocky-border {
     border: 4px solid #fff;
     border-top-color: rgba(255,255,255,0.8);
@@ -35,6 +68,7 @@
     border-bottom-color: rgba(255,255,255,0.8);
   }
 
+  /* ── Buttons with Micro-interactions ── */
   .mc-btn {
     border: 4px solid;
     border-top-color: rgba(255,255,255,0.8);
@@ -42,7 +76,18 @@
     border-right-color: rgba(0,0,0,0.6);
     border-bottom-color: rgba(0,0,0,0.8);
     text-shadow: 2px 2px 0 #000;
-    transition: transform 0.1s;
+    transition: transform 0.2s var(--transition-smooth),
+                box-shadow 0.3s var(--transition-smooth),
+                filter 0.2s var(--transition-smooth);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mc-btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    filter: brightness(1.15);
   }
 
   .mc-btn:active {
@@ -50,86 +95,482 @@
     border-left-color: rgba(0,0,0,0.6);
     border-right-color: rgba(255,255,255,0.6);
     border-bottom-color: rgba(255,255,255,0.8);
-    transform: translateY(2px);
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  .mc-btn:disabled {
+    transform: none;
+    filter: brightness(0.6);
+    cursor: not-allowed;
+  }
+
+  /* ── Card Hover Utility ── */
+  .card-hover {
+    transition: transform 0.3s var(--transition-smooth),
+                box-shadow 0.3s var(--transition-smooth),
+                border-color 0.3s var(--transition-smooth);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3), var(--glow-gold);
   }
 }
 
+/* ═══════════════════════════════════════
+   CLASSY RPG UX ANIMATIONS & BACKGROUNDS
+   ═══════════════════════════════════════ */
+
+/* ── Majestic Background ── */
+.bg-classy {
+  background-image: url('/bg-classy.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+/* ── Login Entry Animation ── */
+@keyframes slide-in-top {
+  0% { transform: translateY(-50px); opacity: 0; }
+  60% { transform: translateY(10px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.slide-in-top {
+  animation: slide-in-top 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Stone & Wood UI ── */
+.stone-panel {
+  background: #3a3a3a;
+  border: 4px solid;
+  border-top-color: #555;
+  border-left-color: #555;
+  border-right-color: #1a1a1a;
+  border-bottom-color: #1a1a1a;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 8px 15px rgba(0,0,0,0.6);
+  color: #ddd;
+}
+
+.wood-btn {
+  background: #5c3a21;
+  border: 4px solid;
+  border-top-color: #8b5a2b;
+  border-left-color: #7b4a1b;
+  border-right-color: #3b1a01;
+  border-bottom-color: #2b0a00;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);
+  color: #ffd700;
+  text-shadow: 2px 2px 0 #000;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.wood-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 8px);
+  pointer-events: none;
+}
+
+.wood-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.2);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 6px 12px rgba(0,0,0,0.6);
+}
+
+.wood-btn:active {
+  transform: translateY(2px);
+  border-top-color: #2b0a00;
+  border-left-color: #3b1a01;
+  border-right-color: #8b5a2b;
+  border-bottom-color: #7b4a1b;
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+}
+
+/* ── Animated Swaying Grass ── */
+.grass-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.grass-blade {
+  position: absolute;
+  bottom: -10px;
+  width: 10px;
+  height: 60px;
+  background: linear-gradient(to top, #1a3a10, #39FF14);
+  border-radius: 50% 50% 0 0;
+  transform-origin: bottom center;
+  animation: sway 4s ease-in-out infinite alternate;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.3));
+}
+
+@keyframes sway {
+  0% { transform: scaleY(0.9) rotate(-10deg); }
+  50% { transform: scaleY(1.1) rotate(5deg); }
+  100% { transform: scaleY(0.95) rotate(12deg); }
+}
+
+/* ── Epic Title Text ── */
+.text-epic-gold {
+  background: linear-gradient(to bottom, #FFF7A0 0%, #FFD700 40%, #D4AF37 60%, #8B6508 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: bold;
+  text-shadow: 0px 4px 4px rgba(0,0,0,0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+/* ── Floating Fireflies System ── */
+.fireflies {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+
+.particle {
+  position: absolute;
+  bottom: -20px;
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: float-up var(--duration, 12s) var(--delay, 0s) infinite linear;
+}
+
+/* ── Battle Arena Animations ── */
+@keyframes player-attack {
+  0% { transform: translateX(0) rotate(0); }
+  30% { transform: translateX(40px) rotate(15deg) scale(1.1); filter: brightness(1.2) drop-shadow(0 0 10px rgba(57,255,20,0.8)); }
+  60% { transform: translateX(45px) rotate(20deg) scale(1.1); }
+  100% { transform: translateX(0) rotate(0) scale(1); }
+}
+
+.anim-player-attack {
+  animation: player-attack 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes monster-hit {
+  0% { transform: translateX(0) scale(1); filter: brightness(1) hue-rotate(0deg); }
+  30% { transform: translateX(20px) scale(0.95); filter: brightness(1.8) invert(0.2) drop-shadow(0 0 20px rgba(255,0,0,0.8)); }
+  100% { transform: translateX(0) scale(1); filter: brightness(1) hue-rotate(0deg); }
+}
+
+.anim-monster-hit {
+  animation: monster-hit 0.2s ease-out both;
+}
+
+@keyframes breathing-idle {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.anim-breathing {
+  animation: breathing-idle 2s ease-in-out infinite alternate;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(0deg) scale(0.5);
+  }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.4; }
+  100% {
+    opacity: 0;
+    transform: translateY(-10vh) rotate(360deg) scale(0.8);
+  }
+}
+
+/* ═══════════════════════════════════════
+   ENTRANCE ANIMATIONS
+   ═══════════════════════════════════════ */
+
+.fade-in-up {
+  animation: fade-in-up 0.6s var(--transition-smooth) both;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(25px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scale-in {
+  animation: scale-in 0.5s var(--transition-smooth) both;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.5s var(--transition-smooth) both;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes slide-in-left {
+  0% { opacity: 0; transform: translateX(-30px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════
+   GLOW & SHIMMER EFFECTS
+   ═══════════════════════════════════════ */
+
+.glow-gold {
+  box-shadow: var(--glow-gold);
+}
+
+.glow-green {
+  box-shadow: var(--glow-green);
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), 0 0 50px rgba(255, 215, 0, 0.2); }
+}
+
+.text-glow-gold {
+  text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255,255,255,0.15) 45%,
+    rgba(255,255,255,0.25) 50%,
+    rgba(255,255,255,0.15) 55%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-slide 3s infinite;
+}
+
+@keyframes shimmer-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════
+   GAME-SPECIFIC ANIMATIONS
+   ═══════════════════════════════════════ */
+
 .shake-damage {
-    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
-    filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); 
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+  filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5);
 }
 
 @keyframes shake {
-    10%, 90% { transform: translate3d(-4px, 0, 0); }
-    20%, 80% { transform: translate3d(6px, 0, 0); }
-    30%, 50%, 70% { transform: translate3d(-12px, 0, 0); }
-    40%, 60% { transform: translate3d(12px, 0, 0); }
+  10%, 90% { transform: translate3d(-4px, 0, 0); }
+  20%, 80% { transform: translate3d(6px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-12px, 0, 0); }
+  40%, 60% { transform: translate3d(12px, 0, 0); }
 }
 
 .bounce {
-    animation: bounce 1s infinite alternate ease-in-out;
+  animation: bounce 1s infinite alternate ease-in-out;
 }
 
 @keyframes bounce {
-    from { transform: translateY(0); }
-    to { transform: translateY(-10px); }
+  from { transform: translateY(0); }
+  to { transform: translateY(-10px); }
 }
 
 .animate-shake {
-    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 .animate-flash {
-    animation: flash 0.2s ease-out both;
+  animation: flash 0.2s ease-out both;
 }
 
 @keyframes flash {
-    0% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
-    50% { filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-    100% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
+  0% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
+  50% { filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
+  100% { filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
 }
 
+/* Error shake for forms */
+.error-shake {
+  animation: error-shake 0.5s ease-in-out;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+/* Loading dots */
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+/* ═══════════════════════════════════════
+   INPUT FOCUS EFFECTS
+   ═══════════════════════════════════════ */
+
 input {
-    outline: none !important;
+  outline: none !important;
+}
+
+input:focus {
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3), inset 0 0 6px rgba(255, 215, 0, 0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .typed-correct {
-    color: #39FF14;
+  color: #39FF14;
 }
 .typed-incorrect {
-    color: #FF4444;
+  color: #FF4444;
 }
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════ */
 
 ::-webkit-scrollbar {
-    width: 6px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb {
-    background: #55AA55;
-    border: 2px solid #000;
+  background: linear-gradient(180deg, #55AA55, #3E8E3E);
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #66BB66, #55AA55);
 }
 
-/* Death Screen */
+/* ═══════════════════════════════════════
+   DEATH / VICTORY / LEVEL UP
+   ═══════════════════════════════════════ */
+
 @keyframes death-appear {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .death-text-glow {
-    animation: death-pulse 2s ease-in-out infinite;
+  animation: death-pulse 2s ease-in-out infinite;
 }
 
 @keyframes death-pulse {
-    0%, 100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 80px #990000; }
-    50% { text-shadow: 0 0 30px #ff3333, 0 0 60px #ff0000, 0 0 100px #cc0000; }
+  0%, 100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 80px #990000; }
+  50% { text-shadow: 0 0 30px #ff3333, 0 0 60px #ff0000, 0 0 100px #cc0000; }
 }
 
-/* Level Up Flash */
 @keyframes levelup-flash {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
+/* Victory gold burst */
+.victory-burst {
+  animation: victory-burst 1s ease-out both;
+}
+
+@keyframes victory-burst {
+  0% { transform: scale(0.5); opacity: 0; text-shadow: 0 0 0 transparent; }
+  50% { transform: scale(1.15); text-shadow: 0 0 40px #ffd700, 0 0 80px #ffa500; }
+  100% { transform: scale(1); opacity: 1; text-shadow: 0 0 20px #ffd700, 0 0 40px #ffa500; }
+}
+
+/* Combo scales */
+.combo-fire {
+  animation: combo-fire 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes combo-fire {
+  0% { transform: scale(1); text-shadow: 2px 2px 0 #000, 0 0 10px #ff00ff; }
+  100% { transform: scale(1.15); text-shadow: 2px 2px 0 #000, 0 0 20px #ff00ff, 0 0 40px #ff6b6b; }
+}
+
+/* HP bar color utilities */
+.hp-bar-high { background: linear-gradient(90deg, #39FF14, #50FA7B); }
+.hp-bar-mid { background: linear-gradient(90deg, #FFD700, #FFA500); }
+.hp-bar-low { background: linear-gradient(90deg, #FF4444, #FF6B6B); }
+
+/* Boss border glow */
+.boss-glow {
+  animation: boss-glow 2s ease-in-out infinite;
+}
+
+@keyframes boss-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 85, 85, 0.5), inset 0 0 10px rgba(255, 85, 85, 0.1); }
+  50% { box-shadow: 0 0 25px rgba(255, 85, 85, 0.8), 0 0 50px rgba(255, 85, 85, 0.3), inset 0 0 15px rgba(255, 85, 85, 0.2); }
+}
+
+/* Next-available level pulse */
+.next-level-pulse {
+  animation: next-level-pulse 2s ease-in-out infinite;
+}
+
+@keyframes next-level-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.2); }
+}
+
+/* ═══════════════════════════════════════
+   ACCESSIBILITY: REDUCED MOTION
+   ═══════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .bg-kingdom {
+    animation: none;
+  }
+}

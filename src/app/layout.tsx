@@ -2,16 +2,17 @@ import type { Metadata } from "next";
 import { Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
+import SettingsProvider from "@/components/SettingsProvider";
 
-const pressStart = Press_Start_2P({ 
-  weight: '400', 
-  subsets: ["latin"], 
-  variable: "--font-pixel" 
+const pressStart = Press_Start_2P({
+  weight: '400',
+  subsets: ["latin"],
+  variable: "--font-pixel"
 });
 
 export const metadata: Metadata = {
-  title: "Nature Typing RPG",
-  description: "A multiplayer typing RPG with a blocky aesthetic.",
+  title: "Keyboard Kingdom",
+  description: "A multiplayer typing RPG — type to conquer, fight to survive.",
 };
 
 export default function RootLayout({
@@ -21,9 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${pressStart.variable} antialiased bg-[#87CEEB] text-white font-pixel h-screen w-screen overflow-hidden`}>
+      <body className={`${pressStart.variable} antialiased bg-[#0d1117] text-white font-pixel h-screen w-screen overflow-hidden`}>
         <AuthProvider>
-          {children}
+          <SettingsProvider>
+            {children}
+          </SettingsProvider>
         </AuthProvider>
       </body>
     </html>

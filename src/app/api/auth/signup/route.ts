@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
     try {
-        const { username, password } = await req.json();
+        const { username, password, character, avatar } = await req.json();
 
         if (!username || !password) {
             return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
@@ -28,6 +28,8 @@ export async function POST(req: Request) {
             data: {
                 username,
                 password: hashedPassword,
+                character: character || "heroA",
+                avatar: avatar || "1"
             }
         });
 

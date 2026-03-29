@@ -23,16 +23,31 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        return { id: user.id, name: user.username };
+        return { 
+          id: user.id, 
+          name: user.username,
+          character: (user as any).character,
+          avatar: (user as any).avatar
+        };
       }
     })
   ],
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET || "super-secret-keyboard-kingdom-key",
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.character = (user as any).character;
+        token.avatar = (user as any).avatar;
+      }
+      return token;
+    },
     async session({ session, token }) {
-      if (session?.user && token.sub) {
-        (session.user as any).id = token.sub;
+      if (session?.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).character = token.character;
+        (session.user as any).avatar = token.avatar;
       }
       return session;
     }
