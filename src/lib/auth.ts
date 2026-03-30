@@ -26,8 +26,8 @@ export const authOptions: NextAuthOptions = {
         return { 
           id: user.id, 
           name: user.username,
-          character: (user as any).character,
-          avatar: (user as any).avatar
+          character: user.character,
+          avatar: user.avatar
         };
       }
     })
@@ -38,16 +38,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.character = (user as any).character;
-        token.avatar = (user as any).avatar;
+        token.character = user.character;
+        token.avatar = user.avatar;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).character = token.character;
-        (session.user as any).avatar = token.avatar;
+        session.user.id = token.id ?? session.user.id;
+        session.user.character = token.character ?? session.user.character;
+        session.user.avatar = token.avatar ?? session.user.avatar;
       }
       return session;
     }

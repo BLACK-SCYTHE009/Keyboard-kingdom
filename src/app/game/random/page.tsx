@@ -9,5 +9,5 @@ export default async function RandomLobbyPage() {
         redirect("/");
     }
 
-    return <GameClient mode="random" username={session.user.name} />;
+    return <GameClient mode="random" username={session.user.name} character={session.user.character || "heroA"} />;
 }

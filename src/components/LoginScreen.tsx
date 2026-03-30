@@ -11,6 +11,13 @@ const FIREFLIES = Array.from({ length: 20 }, (_, i) => ({
     delay: `${Math.random() * 2}s`
 }));
 
+const GRASS_BLADES = Array.from({ length: 150 }, (_, i) => ({
+    left: `${(i / 150) * 100}%`,
+    height: `${30 + Math.random() * 40}px`,
+    animationDelay: `${Math.random() * 2}s`,
+    animationDuration: `${2 + Math.random() * 2}s`
+}));
+
 export default function LoginScreen() {
     const [isLogin, setIsLogin] = useState(true);
     const [step, setStep] = useState(1); // For Signup: 1=Creds, 2=Avatar, 3=Character
@@ -79,14 +86,14 @@ export default function LoginScreen() {
                         ))}
                     </div>
                     <div className="grass-container pointer-events-none z-10 w-full absolute bottom-0 h-48">
-                        {Array.from({ length: 150 }).map((_, i) => (
+                        {GRASS_BLADES.map((g) => (
                             <div className="grass-blade absolute bottom-0 w-2 bg-gradient-to-t from-green-900 to-[#55AA55] origin-bottom rounded-t-full"
-                                 key={`g1-${i}`}
+                                 key={g.left}
                                  style={{ 
-                                     left: `${(i / 150) * 100}%`,
-                                     height: `${30 + Math.random() * 40}px`,
-                                     animationDelay: `${Math.random() * 2}s`,
-                                     animationDuration: `${2 + Math.random() * 2}s`
+                                     left: g.left,
+                                     height: g.height,
+                                     animationDelay: g.animationDelay,
+                                     animationDuration: g.animationDuration
                                  }}>
                             </div>
                         ))}

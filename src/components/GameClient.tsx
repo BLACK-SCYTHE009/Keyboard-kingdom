@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
-import { pickWordForLevel } from "@/utils/words";
+import { pickWordForLevel, WordInfo, ElementType } from "@/utils/words";
 import { useSettings } from "@/components/SettingsProvider";
 import dynamic from 'next/dynamic';
 
@@ -11,7 +11,12 @@ const BabylonArena = dynamic(() => import('@/components/BabylonArena'), { ssr: f
 // ─── Sound Effects ───
 function createAudioCtx() {
     if (typeof window === 'undefined') return null;
-    return new (window.AudioContext || (window as any).webkitAudioContext)();
+    const w = window as unknown as {
+        AudioContext?: typeof AudioContext;
+        webkitAudioContext?: typeof AudioContext;
+    };
+    const Ctx = w.AudioContext ?? w.webkitAudioContext;
+    return Ctx ? new Ctx() : null;
 }
 function playSound(ctx: AudioContext | null, vol: number, type: 'hit' | 'hurt' | 'death' | 'levelup' | 'defeat' | 'combo' | 'unlock' | 'wrong') {
     if (!ctx || vol <= 0) return;
@@ -67,18 +72,59 @@ function playSound(ctx: AudioContext | null, vol: number, type: 'hit' | 'hurt' |
 
 // ─── Level Data ───
 const REGULAR_MONSTERS = [
-    { name: "Slime", emoji: "🟩" }, { name: "Spider", emoji: "🕷️" },
-    { name: "Skeleton", emoji: "💀" }, { name: "Zombie", emoji: "🧟" },
-    { name: "Creeper", emoji: "💣" }, { name: "Enderman", emoji: "👾" },
-    { name: "Blaze", emoji: "🔥" }, { name: "Witch", emoji: "🧙" },
-    { name: "Phantom", emoji: "👻" },
+    { name: "Slime", emoji: "🟩", weakness: 'NATURE' as ElementType }, 
+    { name: "Spider", emoji: "🕷️", weakness: 'WATER' as ElementType },
+    { name: "Skeleton", emoji: "💀", weakness: 'FIRE' as ElementType }, 
+    { name: "Zombie", emoji: "🧟", weakness: 'FIRE' as ElementType },
+    { name: "Creeper", emoji: "💣", weakness: 'WATER' as ElementType }, 
+    { name: "Enderman", emoji: "👾", weakness: 'NATURE' as ElementType },
+    { name: "Blaze", emoji: "🔥", weakness: 'WATER' as ElementType }, 
+    { name: "Witch", emoji: "🧙", weakness: 'FIRE' as ElementType },
+    { name: "Phantom", emoji: "👻", weakness: 'NATURE' as ElementType },
 ];
 
 const BOSSES = [
-    { name: "Wither", emoji: "💀", title: "THE WITHER" },
-    { name: "Ender Dragon", emoji: "🐉", title: "THE ENDER DRAGON" },
-    { name: "Warden", emoji: "🗿", title: "THE WARDEN" },
+    { name: "Wither", emoji: "💀", title: "THE WITHER", weakness: 'FIRE' as ElementType },
+    { name: "Ender Dragon", emoji: "🐉", title: "THE ENDER DRAGON", weakness: 'WATER' as ElementType },
+    { name: "Warden", emoji: "🗿", title: "THE WARDEN", weakness: 'NATURE' as ElementType },
+    { name: "Wither Storm", emoji: "🌪️", title: "THE WITHER STORM", weakness: 'FIRE' as ElementType },
 ];
+
+const CLASS_DATA: Record<string, { name: string, hpBonus: number, dmgBonus: number, ability: string }> = {
+    "heroA": { name: "Warrior", hpBonus: 50, dmgBonus: 5, ability: "Crushing Blow: High base damage." },
+    "heroB": { name: "Mage", hpBonus: -20, dmgBonus: 15, ability: "Arcane Core: Massive elemental bonus." },
+    "stella": { name: "Rogue", hpBonus: 0, dmgBonus: 0, ability: "Quick Strike: Faster combo scaling." },
+    "realistic_female": { name: "Rogue", hpBonus: 0, dmgBonus: 0, ability: "Quick Strike: Faster combo scaling." },
+};
+
+type MonsterInfo = {
+    name: string;
+    emoji: string;
+    isBoss: boolean;
+    weakness?: ElementType;
+    maxHp: number;
+    attack: number;
+    speed: number;
+    reward: { gold: number; xp: number };
+    hp?: number;
+};
+
+type LobbyPlayer = {
+    id: string;
+    name: string;
+    isAlive: boolean;
+    level: number;
+    xp: number;
+    dbId?: string;
+};
+
+type LobbyChatMessage = { sender: string; text: string };
+
+function getPlayerClass(character: string) {
+    if (character.toLowerCase().includes("stella")) return CLASS_DATA["stella"];
+    if (character.toLowerCase().includes("female")) return CLASS_DATA["realistic_female"];
+    return CLASS_DATA[character] || CLASS_DATA["heroA"];
+}
 
 function getMonsterForLevel(lvl: number) {
     const isBoss = lvl % 10 === 0;
@@ -89,18 +135,24 @@ function getMonsterForLevel(lvl: number) {
     if (isBoss) {
         const bossIdx = Math.floor(lvl / 10) - 1;
         const boss = BOSSES[bossIdx % BOSSES.length];
-        const scale = 1 + Math.floor(bossIdx / BOSSES.length) * 0.5;
+        let scale = 1 + Math.floor(bossIdx / BOSSES.length) * 0.5;
+        
+        // Special scaling and stats for Wither Storm at high levels
+        if (boss.name === "Wither Storm") scale *= 2.5;
+
         return {
             name: boss.title, emoji: boss.emoji, isBoss: true,
+            weakness: boss.weakness,
             maxHp: Math.floor(500 * scale * (1 + lvl * 0.05)),
-            attack: Math.floor(20 + lvl * 1.5),
-            speed: Math.max(1000, calcSpeed - 400), // Bosses attack faster
-            reward: { gold: 100 + lvl * 10, xp: 200 + lvl * 20 }
+            attack: Math.floor(20 + lvl * 1.5 * (boss.name === "Wither Storm" ? 2 : 1)),
+            speed: Math.max(800, calcSpeed - 600), // Bosses attack faster
+            reward: { gold: 200 + lvl * 20, xp: 400 + lvl * 40 }
         };
     }
+
     const m = REGULAR_MONSTERS[(lvl - 1) % REGULAR_MONSTERS.length];
     return {
-        name: m.name, emoji: m.emoji, isBoss: false,
+        name: m.name, emoji: m.emoji, isBoss: false, weakness: m.weakness,
         maxHp: Math.floor(60 + lvl * 15),
         attack: Math.floor(3 + lvl * 1.2),
         speed: calcSpeed,
@@ -108,7 +160,7 @@ function getMonsterForLevel(lvl: number) {
     };
 }
 
-const TOTAL_LEVELS = 30;
+const TOTAL_LEVELS = 40;
 const STORAGE_KEY = 'kk-savedata';
 
 interface SaveData {
@@ -165,11 +217,12 @@ function saveGameData(data: Partial<SaveData>) {
 // ═══════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════
-export default function GameClient({ mode, username, character }: { mode: 'singleplayer' | 'random', username: string, character: string }) {
+export default function GameClient({ mode, username, character = "heroA" }: { mode: 'singleplayer' | 'random', username: string, character?: string }) {
     const router = useRouter();
     const audioCtxRef = useRef<AudioContext | null>(null);
     const [socket, setSocket] = useState<Socket | null>(null);
     const { sfxVolume, setSettingsOpen, particles } = useSettings();
+    const pClass = getPlayerClass(character);
 
     // Game screens: 'levelselect' | 'playing' | 'dead' | 'victory' | 'levelcomplete' | 'waiting'
     const [screen, setScreen] = useState<string>(mode === 'singleplayer' ? 'levelselect' : 'waiting');
@@ -192,30 +245,34 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
     const [shake, setShake] = useState(false);
     const [flash, setFlash] = useState(false); // Used as isMonsterHit
     const [isPlayerAttacking, setIsPlayerAttacking] = useState(false);
+    const [playerAttackKey, setPlayerAttackKey] = useState(0);
     const [deathOpacity, setDeathOpacity] = useState(0);
     const [levelUpFlash, setLevelUpFlash] = useState(false);
     const [dailyCompleted, setDailyCompleted] = useState(false);
     const [achievements, setAchievements] = useState(DEFAULT_SAVE.achievements);
     const [loginBonusFlash, setLoginBonusFlash] = useState("");
+    const [monsterHitKey, setMonsterHitKey] = useState(0);
     
     // Mechanics tracking
     const [wpm, setWpm] = useState(0);
-    const [wordStartTime, setWordStartTime] = useState(Date.now());
+    const [wordStartTime, setWordStartTime] = useState(0);
     
     const isFrozenRef = useRef(false);
     const hasShieldRef = useRef(false);
     const doubleXpRef = useRef(false);
 
     // Fight
-    const [monster, setMonster] = useState<any>(null);
-    const [currentWord, setCurrentWord] = useState("");
+    const [monster, setMonster] = useState<MonsterInfo | null>(null);
+    const [currentWord, setCurrentWord] = useState<WordInfo | null>(null);
     const [typedVal, setTypedVal] = useState("");
     const [monstersKilled, setMonstersKilled] = useState(0);
     const attackTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [attackKey, setAttackKey] = useState(0); // For resetting UI animations
+    const [attackDuration, setAttackDuration] = useState(0);
 
     // Multiplayer
-    const [players, setPlayers] = useState<any[]>([]);
-    const [chatHistory, setChatHistory] = useState<any[]>([]);
+    const [players, setPlayers] = useState<LobbyPlayer[]>([]);
+    const [chatHistory, setChatHistory] = useState<LobbyChatMessage[]>([]);
     const [chatInput, setChatInput] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -259,13 +316,13 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
             setTimeout(() => setLoginBonusFlash(""), 4000);
         }
         
-        const dmg = 10 + (saved.playerLvl * 2);
-        const hp = 100 + (saved.playerLvl * 10);
+        const dmg = 10 + (saved.playerLvl * 2) + pClass.dmgBonus;
+        const hp = 100 + (saved.playerLvl * 10) + pClass.hpBonus;
         setDamage(dmg);
         setPlayerMaxHp(hp);
         setPlayerHp(hp);
         setXpToNext(Math.floor(100 * Math.pow(1.5, saved.playerLvl - 1)));
-    }, []);
+    }, [character, pClass.dmgBonus, pClass.hpBonus]);
 
     const ensureAudio = useCallback(() => {
         if (!audioCtxRef.current) audioCtxRef.current = createAudioCtx();
@@ -310,8 +367,10 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
     };
 
     // Attack timer
-    const spStartAttackTimer = useCallback((m: any) => {
+    const spStartAttackTimer = useCallback(function spStartAttackTimer(m: MonsterInfo) {
         if (attackTimerRef.current) clearTimeout(attackTimerRef.current);
+        setAttackKey(prev => prev + 1);
+        setAttackDuration(m.speed);
         attackTimerRef.current = setTimeout(() => {
             if (isFrozenRef.current) {
                 spStartAttackTimer(m);
@@ -341,7 +400,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                 return newHp;
             });
         }, m.speed);
-    }, []);
+    }, [sfxVolume]);
 
     useEffect(() => {
         if (mode === 'singleplayer' && screen === 'playing' && monster) {
@@ -369,11 +428,12 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
             }
         });
         newSocket.on('game_started', () => setScreen('playing'));
-        newSocket.on('update_players', (p) => setPlayers(p));
+        newSocket.on('update_players', (p: LobbyPlayer[]) => setPlayers(p));
         newSocket.on('spawn_monster', (m) => { setMonster(m); setTypedVal(""); });
         newSocket.on('new_word', (w) => { setCurrentWord(w); setTypedVal(""); });
         newSocket.on('monster_damaged', (data) => {
-            setMonster((prev: any) => prev ? { ...prev, hp: data.hp } : prev);
+            setMonsterHitKey(k => k + 1);
+            setMonster((prev) => prev ? { ...prev, hp: data.hp as number } : prev);
             setFlash(true); playSound(audioCtxRef.current, sfxVolume, 'hit'); setTimeout(() => setFlash(false), 200);
         });
         newSocket.on('monster_attack', (dmg) => {
@@ -414,18 +474,19 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
         ensureAudio();
         const val = e.target.value.toUpperCase();
         setTypedVal(val);
-        if (currentWord && !currentWord.startsWith(val)) setCombo(0);
+        if (currentWord && !currentWord.text.startsWith(val)) setCombo(0);
 
-        if (val === currentWord && monster) {
+        if (currentWord && val === currentWord.text && monster) {
             setTypedVal("");
             const activeCombo = combo;
-            setCombo(c => c + 1);
+            const comboGain = pClass.name === "Rogue" ? 2 : 1;
+            setCombo(c => c + comboGain);
             if (activeCombo > 0) playSound(audioCtxRef.current, sfxVolume, 'combo');
 
             // Basic instantaneous WPM calculation: (chars / 5) / (minutes)
             const minutesElapsed = (Date.now() - wordStartTime) / 60000;
             if (minutesElapsed > 0.01) {
-                const currentWpm = Math.floor((currentWord.length / 5) / minutesElapsed);
+                const currentWpm = Math.floor((currentWord.text.length / 5) / minutesElapsed);
                 setWpm(prev => prev === 0 ? currentWpm : Math.floor((prev + currentWpm) / 2));
                 
                 // Track achievement
@@ -442,12 +503,20 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
             }
 
             if (mode === 'singleplayer') {
+                setMonsterHitKey(k => k + 1);
                 playSound(audioCtxRef.current, sfxVolume, 'hit');
                 // Trigger Attack & Hit animations
-                setIsPlayerAttacking(true); setTimeout(() => setIsPlayerAttacking(false), 150);
+                setIsPlayerAttacking(true); setPlayerAttackKey(k => k + 1); setTimeout(() => setIsPlayerAttacking(false), 150);
                 setFlash(true); setTimeout(() => setFlash(false), 200);
-                const finalDamage = damage + (activeCombo * 5);
-                const newHp = monster.hp - finalDamage;
+
+                let elementalMult = 1;
+                if (currentWord.element !== 'NORMAL' && currentWord.element === monster.weakness) {
+                    elementalMult = pClass.name === "Mage" ? 3 : 2; // Elemental bonus
+                }
+
+                const finalDamage = (damage + (activeCombo * 5)) * elementalMult;
+                const currentHp = monster.hp ?? monster.maxHp;
+                const newHp = currentHp - finalDamage;
                 if (newHp <= 0) {
                     if (attackTimerRef.current) clearTimeout(attackTimerRef.current);
                     playSound(audioCtxRef.current, sfxVolume, 'defeat');
@@ -501,6 +570,8 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
             } else {
                 if (socket) {
                     const finalDamage = damage + (activeCombo * 5);
+                    // Let the hero lunge locally even in multiplayer.
+                    setIsPlayerAttacking(true); setPlayerAttackKey(k => k + 1); setTimeout(() => setIsPlayerAttacking(false), 150);
                     socket.emit('player_attack', { lobbyId: "random_global", word: currentWord, damage: finalDamage, attacker: username });
                 }
             }
@@ -542,7 +613,10 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                     </div>
                 )}
                 <header className="h-14 bg-gradient-to-r from-[#6B3A1B] to-[#8B5A2B] flex items-center justify-between px-4 shrink-0 border-b-4 border-black shadow-lg">
-                    <div className="text-xs text-white slide-in-left">⚔️ {username}&apos;s ADVENTURE</div>
+                    <div className="flex flex-col slide-in-left">
+                        <div className="text-[10px] text-white">⚔️ {username}</div>
+                        <div className="text-[8px] text-gold uppercase tracking-widest">{pClass.name}</div>
+                    </div>
                     <div className="flex gap-3 items-center">
                         <span className="text-[9px] text-yellow-400 text-glow-gold">🪙 {gold}</span>
                         <span className="text-[9px] text-[#39FF14]" style={{ textShadow: '0 0 8px rgba(57,255,20,0.5)' }}>LVL {playerLvl}</span>
@@ -668,7 +742,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                     <div className="bg-gradient-to-b from-gray-800 to-gray-900 blocky-border p-6 flex flex-col items-center card-hover">
                         <div className="text-5xl mb-2 bounce">🧪</div>
                         <h3 className="text-red-400 text-sm mb-1">Health Potion</h3>
-                        <p className="text-[10px] text-gray-400 text-center h-8">Restores 50 HP instantly during combat. Press '1' to use.</p>
+                        <p className="text-[10px] text-gray-400 text-center h-8">Restores 50 HP instantly during combat. Press &apos;1&apos; to use.</p>
                         <div className="text-xs text-yellow-400 my-2">Cost: 50g</div>
                         <div className="text-[9px] text-gray-500 mb-2">Owned: {inventory.potions}</div>
                         <button onClick={() => buyItem('potions', 50)} className={`mc-btn ${gold >= 50 ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 opacity-50'} text-xs px-6 py-2`}>BUY</button>
@@ -677,7 +751,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                     <div className="bg-gradient-to-b from-gray-800 to-gray-900 blocky-border p-6 flex flex-col items-center card-hover">
                         <div className="text-5xl mb-2 bounce">⌛</div>
                         <h3 className="text-blue-400 text-sm mb-1">Time Freeze</h3>
-                        <p className="text-[10px] text-gray-400 text-center h-8">Stops enemy attacks for 5 seconds. Press '2' to use.</p>
+                        <p className="text-[10px] text-gray-400 text-center h-8">Stops enemy attacks for 5 seconds. Press &apos;2&apos; to use.</p>
                         <div className="text-xs text-yellow-400 my-2">Cost: 100g</div>
                         <div className="text-[9px] text-gray-500 mb-2">Owned: {inventory.freezes}</div>
                         <button onClick={() => buyItem('freezes', 100)} className={`mc-btn ${gold >= 100 ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 opacity-50'} text-xs px-6 py-2`}>BUY</button>
@@ -695,7 +769,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                     <div className="bg-gradient-to-b from-gray-800 to-gray-900 blocky-border p-6 flex flex-col items-center card-hover">
                         <div className="text-5xl mb-2 bounce">🛡️</div>
                         <h3 className="text-gray-300 text-sm mb-1">Steel Shield</h3>
-                        <p className="text-[10px] text-gray-400 text-center h-8">Absorbs the next monster attack completely. Press '3' to use.</p>
+                        <p className="text-[10px] text-gray-400 text-center h-8">Absorbs the next monster attack completely. Press &apos;3&apos; to use.</p>
                         <div className="text-xs text-yellow-400 my-2">Cost: 60g</div>
                         <div className="text-[9px] text-gray-500 mb-2">Owned: {inventory.shields}</div>
                         <button onClick={() => buyItem('shields', 60)} className={`mc-btn ${gold >= 60 ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 opacity-50'} text-xs px-6 py-2`}>BUY</button>
@@ -764,7 +838,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
         );
     }
 
-    const getBgForMonster = (m: any) => {
+    const getBgForMonster = (m: MonsterInfo | null) => {
         if (!m) return 'url("/bg_classy.png")';
         const name = m.name.toUpperCase();
         if (['ZOMBIE', 'SKELETON', 'WITHER', 'SLABYRINTH', 'PHANTOM'].some(x => name.includes(x))) return `url('/bg_graveyard.png')`;
@@ -914,7 +988,16 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                 <div className="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-black/80 to-transparent z-0 pointer-events-none"></div>
 
                 {monster && (
-                    <BabylonArena enemyName={monster.name} isAttacking={isPlayerAttacking} isHit={flash} character={character} />
+                    <BabylonArena 
+                        enemyName={monster.name} 
+                        isAttacking={isPlayerAttacking} 
+                        isHit={flash} 
+                        character={character}
+                        playerAttackKey={playerAttackKey}
+                        monsterHitKey={monsterHitKey}
+                        attackKey={attackKey}
+                        attackDuration={attackDuration}
+                    />
                 )}
 
                 {screen === 'waiting' && !monster && mode === 'random' && (
@@ -928,7 +1011,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                 {monster && (
                     <div className="flex flex-col items-center w-full z-10 px-4 md:px-12 xl:px-32 h-full justify-center mt-12">
                         {/* Status/Health Bars */}
-                        <div className="flex justify-between w-full max-w-4xl mb-4 px-4 hidden md:flex">
+                        <div className="flex flex-wrap justify-between w-full max-w-4xl mb-4 px-4 gap-4">
                            {/* Hero Stats */}
                            <div className="flex flex-col items-start drop-shadow-md">
                                <div className="text-lg font-bold text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>{username}</div>
@@ -939,8 +1022,15 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                            {/* Monster Stats */}
                            <div className="flex flex-col items-end drop-shadow-md">
                                <div className="text-lg font-bold text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>{monster.name} {monster.isBoss ? '👑' : ''}</div>
+                               {/* Attack Charge Indicator */}
+                               <div className="w-48 h-1.5 bg-black/40 blocky-border-inner mb-1 overflow-hidden">
+                                   <div key={attackKey} className="h-full attack-charge-bar" style={{ animationDuration: `${attackDuration}ms` }}></div>
+                               </div>
                                <div className="w-48 h-5 bg-black blocky-border-inner relative shadow-lg">
-                                   <div className={`h-full ${getHpBarClass(monster.hp, monster.maxHp)} transition-all ease-out`} style={{ width: `${Math.max(0, (monster.hp/monster.maxHp)*100)}%`}}></div>
+                                   <div
+                                       className={`h-full ${getHpBarClass(monster.hp ?? monster.maxHp, monster.maxHp)} transition-all ease-out`}
+                                       style={{ width: `${Math.max(0, ((monster.hp ?? monster.maxHp) / monster.maxHp) * 100)}%` }}
+                                   ></div>
                                </div>
                            </div>
                         </div>
@@ -953,7 +1043,7 @@ export default function GameClient({ mode, username, character }: { mode: 'singl
                         {/* Typing Interface */}
                         <div className="mt-auto mb-12 text-2xl tracking-widest bg-black/90 px-8 py-4 blocky-border-inner drop-shadow-lg scale-in"
                              style={{ boxShadow: '0 0 30px rgba(0,0,0,0.8)' }}>
-                            {currentWord.split('').map((char, i) => (
+                            {currentWord?.text.split('').map((char, i) => (
                                 <span key={i} className={`transition-colors duration-100 ${
                                     i < typedVal.length
                                         ? (typedVal[i] === char ? 'text-[#39FF14]' : 'text-red-500')

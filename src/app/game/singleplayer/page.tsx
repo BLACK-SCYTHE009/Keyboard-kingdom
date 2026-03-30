@@ -9,5 +9,5 @@ export default async function SinglePlayerPage() {
         redirect("/");
     }
 
-    return <GameClient mode="singleplayer" username={session.user.name} character={(session.user as any).character || "heroA"} />;
+    return <GameClient mode="singleplayer" username={session.user.name} character={session.user.character || "heroA"} />;
 }

@@ -18,8 +18,8 @@ export default async function FriendsPage() {
     if (!me) return <div>User not found in DB</div>;
 
     const friends = [
-        ...me.friendsInitiated.map((f: any) => f.friend),
-        ...me.friendsReceived.map((f: any) => f.user)
+        ...me.friendsInitiated.map((f) => f.friend),
+        ...me.friendsReceived.map((f) => f.user)
     ];
 
     async function addFriend(formData: FormData) {
@@ -93,7 +93,7 @@ export default async function FriendsPage() {
                                 <div className="text-[8px] text-gray-600">Add a friend above to start your party</div>
                             </div>
                         ) : (
-                            friends.map((f: any, i: number) => (
+                            friends.map((f, i: number) => (
                                 <div key={f.id}
                                      className="fade-in-up bg-black/60 blocky-border-inner p-4 flex justify-between items-center text-xs text-white card-hover"
                                      style={{ '--delay': `${0.5 + i * 0.1}s` } as React.CSSProperties}>

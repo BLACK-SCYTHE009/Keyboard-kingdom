@@ -1,6 +1,13 @@
-// ─── Dynamic Word Generation System ───
-// Words scale in difficulty (length & complexity) based on the current game level.
-// Now with mixed-tier selection for micro-variation within fights.
+export type ElementType = 'FIRE' | 'WATER' | 'NATURE' | 'NORMAL';
+
+export interface WordInfo {
+    text: string;
+    element: ElementType;
+}
+
+const FIRE_WORDS = ["BLAZE", "FLAME", "PYRE", "EMBER", "SCORCH", "MAGMA", "INFERNO", "HELLFIRE", "ASHES"];
+const WATER_WORDS = ["STREAM", "OCEAN", "TIDE", "WAVE", "STORM", "RIVER", "DEPTHS", "FROST", "GLACIER"];
+const NATURE_WORDS = ["THORN", "VINE", "OAK", "LEAF", "WOOD", "EARTH", "MOSS", "FOREST", "JUNGLE"];
 
 const TIER_1 = [
     "AXE", "BOW", "COW", "DIG", "EGG", "FIG", "GEM", "HIT", "ICE", "JAM",
@@ -50,27 +57,40 @@ function getTierForLevel(level: number): number {
 }
 
 /**
- * Pick a random word with mixed-tier selection for micro-variation.
- * 70% current tier, 20% one tier below, 10% one tier above.
- * Boss levels shift the distribution one tier higher.
+ * Pick a random word metadata with mixed-tier selection.
+ * 20% Chance of an Elemental Word.
  */
-export function pickWordForLevel(level: number): string {
+export function pickWordForLevel(level: number): WordInfo {
     const isBoss = level % 10 === 0;
     let baseTier = getTierForLevel(level);
 
     if (isBoss && baseTier < TIERS.length - 1) baseTier++;
 
-    // Mixed-tier roll
-    const roll = Math.random();
-    let tierIdx: number;
-    if (roll < 0.10 && baseTier < TIERS.length - 1) {
-        tierIdx = baseTier + 1; // 10%: harder word
-    } else if (roll < 0.30 && baseTier > 0) {
-        tierIdx = baseTier - 1; // 20%: easier word
-    } else {
-        tierIdx = baseTier; // 70%: current tier
+    // Element Roll (20%)
+    if (Math.random() < 0.20) {
+        const types: ElementType[] = ['FIRE', 'WATER', 'NATURE'];
+        const element = types[Math.floor(Math.random() * types.length)];
+        const pool = element === 'FIRE' ? FIRE_WORDS : element === 'WATER' ? WATER_WORDS : NATURE_WORDS;
+        return {
+            text: pool[Math.floor(Math.random() * pool.length)].toUpperCase(),
+            element
+        };
     }
 
-    const pool = TIERS[tierIdx];
-    return pool[Math.floor(Math.random() * pool.length)].toUpperCase();
+    // Mixed-tier roll for Normal words
+    const roll = Math.random();
+    let tierIdxIdx: number;
+    if (roll < 0.10 && baseTier < TIERS.length - 1) {
+        tierIdxIdx = baseTier + 1;
+    } else if (roll < 0.30 && baseTier > 0) {
+        tierIdxIdx = baseTier - 1;
+    } else {
+        tierIdxIdx = baseTier;
+    }
+
+    const pool = TIERS[tierIdxIdx];
+    return {
+        text: pool[Math.floor(Math.random() * pool.length)].toUpperCase(),
+        element: 'NORMAL'
+    };
 }

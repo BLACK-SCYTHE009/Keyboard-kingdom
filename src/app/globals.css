@@ -539,6 +539,17 @@ input:focus {
 .hp-bar-mid { background: linear-gradient(90deg, #FFD700, #FFA500); }
 .hp-bar-low { background: linear-gradient(90deg, #FF4444, #FF6B6B); }
 
+/* Monster Attack Charge Bar */
+@keyframes attack-charge {
+  0% { width: 0%; background-color: #50FA7B; }
+  50% { background-color: #FFD700; }
+  100% { width: 100%; background-color: #FF4444; }
+}
+.attack-charge-bar {
+  animation: attack-charge linear forwards;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
+}
+
 /* Boss border glow */
 .boss-glow {
   animation: boss-glow 2s ease-in-out infinite;

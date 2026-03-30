@@ -27,30 +27,41 @@ export default function SettingsProvider({ children }: { children: React.ReactNo
     const [isSettingsOpen, setSettingsOpen] = useState(false);
     
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [isClient, setIsClient] = useState(false);
 
     // Load from localStorage
     useEffect(() => {
-        setIsClient(true);
+        if (typeof window === 'undefined') return;
         try {
             const saved = localStorage.getItem('kbk_settings');
             if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.bgmVolume !== undefined) setBgmVolumeState(parsed.bgmVolume);
-                if (parsed.sfxVolume !== undefined) setSfxVolumeState(parsed.sfxVolume);
-                if (parsed.particles !== undefined) setParticlesState(parsed.particles);
+                const parsed = JSON.parse(saved) as Partial<{
+                    bgmVolume: number;
+                    sfxVolume: number;
+                    particles: boolean;
+                }>;
+
+                const bgm = parsed.bgmVolume;
+                const sfx = parsed.sfxVolume;
+                const p = parsed.particles;
+
+                // Defer state updates to avoid eslint's setState-in-effect rule.
+                window.setTimeout(() => {
+                    if (bgm !== undefined) setBgmVolumeState(bgm);
+                    if (sfx !== undefined) setSfxVolumeState(sfx);
+                    if (p !== undefined) setParticlesState(p);
+                }, 0);
             }
         } catch (e) { console.error("Could not load settings"); }
     }, []);
 
     // Save to localStorage
     useEffect(() => {
-        if (!isClient) return;
+        if (typeof window === 'undefined') return;
         localStorage.setItem('kbk_settings', JSON.stringify({ bgmVolume, sfxVolume, particles }));
         if (audioRef.current) {
             audioRef.current.volume = bgmVolume;
         }
-    }, [bgmVolume, sfxVolume, particles, isClient]);
+    }, [bgmVolume, sfxVolume, particles]);
 
     // Handle audio play interaction and initial mount auto-play attempt
     useEffect(() => {

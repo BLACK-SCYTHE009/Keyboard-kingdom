@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "build": "next build",
-    "start": "NODE_ENV=production node server.mjs",
+    "start": "cross-env NODE_ENV=production node server.mjs",
     "lint": "eslint"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "prisma": "^5.22.0",

@@ -4,7 +4,37 @@ import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSettings } from "@/components/SettingsProvider";
 
-const FIREFLIES = Array.from({ length: 20 }, (_, i) => ({
+// Constants for layout logic
+const MENU_BUTTONS = [
+    { label: "SINGLE PLAYER", icon: "⚔️", desc: "Embark on a solo quest", route: "/game/singleplayer" },
+    { label: "MULTIPLAYER", icon: "🌐", desc: "Join a raid with others", route: "/game/random" },
+    { label: "FRIENDS", icon: "👥", desc: "Manage your party", route: "/friends" },
+];
+
+type MainMenuSession = {
+    user?: {
+        name?: string | null;
+        avatar?: string | null;
+    };
+};
+
+type Firefly = {
+    left: string;
+    top: string;
+    duration: string;
+    delay: string;
+    size: string;
+};
+
+type GrassBlade = {
+    left: string;
+    height: string;
+    delay: string;
+    duration: string;
+    darkness: string;
+};
+
+const FIREFLIES: Firefly[] = Array.from({ length: 20 }, () => ({
     left: `${Math.random() * 100}%`,
     top: `${Math.random() * 100}%`,
     duration: `${6 + Math.random() * 8}s`,
@@ -12,8 +42,7 @@ const FIREFLIES = Array.from({ length: 20 }, (_, i) => ({
     size: `${2 + Math.random() * 4}px`
 }));
 
-// Procedurally generate grass blades
-const GRASS_BLADES = Array.from({ length: 150 }, (_, i) => ({
+const GRASS_BLADES: GrassBlade[] = Array.from({ length: 150 }, (_, i) => ({
     left: `${(i / 150) * 100}%`,
     height: `${30 + Math.random() * 50}px`,
     delay: `-${Math.random() * 4}s`,
@@ -21,20 +50,22 @@ const GRASS_BLADES = Array.from({ length: 150 }, (_, i) => ({
     darkness: Math.random() > 0.5 ? '#1a3a10' : '#11220a'
 }));
 
-const MENU_BUTTONS = [
-    { label: "SINGLE PLAYER", icon: "⚔️", desc: "Embark on a solo quest", route: "/game/singleplayer" },
-    { label: "MULTIPLAYER", icon: "🌐", desc: "Join a raid with others", route: "/game/random" },
-    { label: "FRIENDS", icon: "👥", desc: "Manage your party", route: "/friends" },
-];
+export default function MainMenu({ session }: { session: MainMenuSession }) {
+    const [mounted, setMounted] = useState(false);
 
-export default function MainMenu({ session }: { session: any }) {
+    useEffect(() => {
+        // Run async to satisfy eslint's setState-in-effect rule and avoid cascading renders.
+        const t = window.setTimeout(() => setMounted(true), 0);
+        return () => window.clearTimeout(t);
+    }, []);
+
     const router = useRouter();
     const displayName = session.user?.name?.toUpperCase() || "HERO";
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const { setSettingsOpen, particles } = useSettings();
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 15; // Max 7.5 deg tilt
+        const x = (e.clientX / window.innerWidth - 0.5) * 15;
         const y = (e.clientY / window.innerHeight - 0.5) * -15;
         setMousePos({ x, y });
     };
@@ -55,7 +86,7 @@ export default function MainMenu({ session }: { session: any }) {
             </div>
 
             {/* ── Floating Fireflies ── */}
-            {particles && (
+            {mounted && particles && (
                 <div className="fireflies">
                     {FIREFLIES.map((f, i) => (
                         <div key={i} className="absolute rounded-full bg-yellow-300 pointer-events-none"
@@ -120,19 +151,21 @@ export default function MainMenu({ session }: { session: any }) {
             </div>
 
             {/* ── Animated Swaying Grass Foreground ── */}
-            <div className="grass-container">
-                {GRASS_BLADES.map((g, i) => (
-                    <div key={i} className="grass-blade"
-                         style={{
-                             left: g.left,
-                             height: g.height,
-                             animationDelay: g.delay,
-                             animationDuration: g.duration,
-                             background: `linear-gradient(to top, ${g.darkness}, #3E8E3E)`
-                         }}>
-                    </div>
-                ))}
-            </div>
+            {mounted && (
+                <div className="grass-container">
+                    {GRASS_BLADES.map((g, i) => (
+                        <div key={i} className="grass-blade"
+                             style={{
+                                 left: g.left,
+                                 height: g.height,
+                                 animationDelay: g.delay,
+                                 animationDuration: g.duration,
+                                 background: `linear-gradient(to top, ${g.darkness}, #3E8E3E)`
+                             }}>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* ── Footer ── */}
             <div className="fade-in-up absolute bottom-2 text-[8px] tracking-[0.2em] text-white/70 z-10 select-none drop-shadow-md"
