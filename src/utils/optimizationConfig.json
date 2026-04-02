@@ -1,0 +1,50 @@
+{
+  "generated": "2026-04-02T11:14:40.846Z",
+  "summary": {
+    "totalModels": 19,
+    "totalSizeMB": "609.74",
+    "urgentOptimizations": 2,
+    "potentialSavings": "300MB+"
+  },
+  "recommendations": [
+    {
+      "model": "realistic_female.glb",
+      "currentSizeMB": "125.95",
+      "priority": "URGENT",
+      "action": "replace_with_alternative",
+      "alternative": "character_boy_1_fbx.glb",
+      "reason": "125MB model is too large for real-time loading"
+    },
+    {
+      "model": "zombie.glb",
+      "currentSizeMB": "108.20",
+      "priority": "HIGH",
+      "action": "compress_textures",
+      "targetSize": "30MB",
+      "reason": "108MB zombie needs texture compression"
+    },
+    {
+      "model": "crystal_spider.glb",
+      "currentSizeMB": "64.02",
+      "priority": "COMPLETED",
+      "action": "replace_with_alternative",
+      "alternative": "pc_spider.glb",
+      "reason": "Already replaced with 5.3MB alternative"
+    },
+    {
+      "model": "fallen_angel_demon_knight_with_dual_wings.glb",
+      "currentSizeMB": "57.82",
+      "priority": "MEDIUM",
+      "action": "reduce_polygons",
+      "reason": "57MB - can be reduced with polygon reduction"
+    },
+    {
+      "model": "demonic_horned_horror_knight.glb",
+      "currentSizeMB": "55.49",
+      "priority": "MEDIUM",
+      "action": "compress_textures",
+      "targetSize": "25MB",
+      "reason": "55MB knight needs optimization"
+    }
+  ]
+}

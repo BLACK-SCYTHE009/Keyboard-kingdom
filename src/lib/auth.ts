@@ -32,8 +32,16 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   secret: process.env.NEXTAUTH_SECRET || "super-secret-keyboard-kingdom-key",
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

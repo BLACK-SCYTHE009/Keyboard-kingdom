@@ -207,23 +207,77 @@ export default function LoginScreen() {
 
                         {!isLogin && step === 3 && (
                             <div className="flex flex-col gap-3 fade-in">
-                                <div className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Select Character</div>
-                                <div className="flex gap-4">
+                                <div className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Choose Your Hero</div>
+                                <div className="grid grid-cols-3 gap-3 mb-4">
                                     <button
                                         type="button"
                                         onClick={() => setCharacter("heroA")}
-                                        className={`flex-1 p-4 blocky-border transition-all duration-200 ${character === "heroA" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
+                                        className={`p-3 blocky-border transition-all duration-200 ${character === "heroA" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
                                     >
-                                        <div className="text-2xl mb-2 bounce">🤺</div>
-                                        <div className="text-[8px] text-white">KNIGHT</div>
+                                        <div className="text-2xl mb-1">🤺</div>
+                                        <div className="text-[8px] text-white">Knight</div>
+                                        <div className="text-[6px] text-gray-400">Classic Hero</div>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setCharacter("heroB")}
-                                        className={`flex-1 p-4 blocky-border transition-all duration-200 ${character === "heroB" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
+                                        className={`p-3 blocky-border transition-all duration-200 ${character === "heroB" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
                                     >
-                                        <div className="text-2xl mb-2 bounce">🏹</div>
-                                        <div className="text-[8px] text-white">RANGER</div>
+                                        <div className="text-2xl mb-1">🏹</div>
+                                        <div className="text-[8px] text-white">Ranger</div>
+                                        <div className="text-[6px] text-gray-400">Swift Hero</div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCharacter("stella")}
+                                        className={`p-3 blocky-border transition-all duration-200 ${character === "stella" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
+                                    >
+                                        <div className="text-2xl mb-1">👸</div>
+                                        <div className="text-[8px] text-white">Stella</div>
+                                        <div className="text-[6px] text-gray-400">Mystic Hero</div>
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCharacter("tomb_raider_laracroft")}
+                                        className={`p-3 blocky-border transition-all duration-200 ${character === "tomb_raider_laracroft" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
+                                    >
+                                        <div className="text-2xl mb-1">🗡️</div>
+                                        <div className="text-[8px] text-white">Adventurer</div>
+                                        <div className="text-[6px] text-gray-400">Elite Hero</div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCharacter("realistic_female")}
+                                        className={`p-3 blocky-border transition-all duration-200 ${character === "realistic_female" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
+                                    >
+                                        <div className="text-2xl mb-1">🦸</div>
+                                        <div className="text-[8px] text-white">Warrior</div>
+                                        <div className="text-[6px] text-gray-400">Legendary Hero</div>
+                                    </button>
+                                </div>
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // Clear all previous login data
+                                            if (typeof window !== 'undefined') {
+                                                localStorage.clear();
+                                                sessionStorage.clear();
+                                                // Clear NextAuth session
+                                                document.cookie.split(";").forEach(cookie => {
+                                                    const eqPos = cookie.indexOf("=");
+                                                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                                                    if (name.startsWith("next-auth") || name.startsWith("__Secure")) {
+                                                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                        className="bg-red-600 hover:bg-red-700 text-white text-[9px] px-3 py-2 blocky-border mb-4 transition-colors"
+                                    >
+                                        🗑️ Clear All Data
                                     </button>
                                 </div>
                             </div>

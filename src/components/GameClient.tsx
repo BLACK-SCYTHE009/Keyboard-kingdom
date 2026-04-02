@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { pickWordForLevel, WordInfo, ElementType } from "@/utils/words";
 import { useSettings } from "@/components/SettingsProvider";
 import dynamic from 'next/dynamic';
+import ModelPerformanceMonitor from "@/components/ModelPerformanceMonitor";
 
 const BabylonArena = dynamic(() => import('@/components/BabylonArena'), { ssr: false });
 
@@ -997,6 +998,7 @@ export default function GameClient({ mode, username, character = "heroA" }: { mo
                         monsterHitKey={monsterHitKey}
                         attackKey={attackKey}
                         attackDuration={attackDuration}
+                        monsterData={monster}
                     />
                 )}
 
@@ -1077,9 +1079,7 @@ export default function GameClient({ mode, username, character = "heroA" }: { mo
                         if (e.key === '1' && inventory.potions > 0) {
                             e.preventDefault();
                             setInventory(inv => ({ ...inv, potions: inv.potions - 1 }));
-                            setPlayerHp(prev => Math.min(playerMaxHp, prev + 50));
-                            playSound(audioCtxRef.current, sfxVolume, 'levelup');
-                            setFlash(true); setTimeout(() => setFlash(false), 200);
+                            setPlayerHp((prev: number) => Math.min(prev + 50, playerMaxHp));
                         } else if (e.key === '2' && inventory.freezes > 0 && !isFrozenRef.current) {
                             e.preventDefault();
                             setInventory(inv => ({ ...inv, freezes: inv.freezes - 1 }));
@@ -1092,10 +1092,13 @@ export default function GameClient({ mode, username, character = "heroA" }: { mo
                         }
                     }
                 }}
-                    disabled={screen !== 'playing' || !monster}
-                    className="w-full max-w-xl h-16 mt-4 bg-black/90 text-white text-2xl font-pixel p-4 border-4 border-gray-500 uppercase placeholder-gray-600 text-center disabled:opacity-40 transition-all duration-300 focus:outline-none focus:border-yellow-500 focus:shadow-[0_0_15px_rgba(255,215,0,0.5)]"
-                    placeholder={screen === 'playing' ? "TYPE TO ATTACK..." : "WAITING..."} autoFocus />
+                disabled={screen !== 'playing' || !monster}
+                className="w-full max-w-xl h-16 mt-4 bg-black/90 text-white text-2xl font-pixel p-4 border-4 border-gray-500 uppercase placeholder-gray-600 text-center disabled:opacity-40 transition-all duration-300 focus:outline-none focus:border-yellow-500 focus:shadow-[0_0_15px_rgba(255,215,0,0.5)]"
+                placeholder={screen === 'playing' ? "TYPE TO ATTACK..." : "WAITING..."} autoFocus />
             </div>
+            
+            {/* Performance Monitor */}
+            <ModelPerformanceMonitor />
         </div>
     );
 }

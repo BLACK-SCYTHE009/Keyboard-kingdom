@@ -20,12 +20,61 @@ const words = [
 ];
 
 const levels = [
-    { name: "Slime", emoji: "🟩", maxHp: 100, attack: 5, speed: 4000, reward: { gold: 10, xp: 15 } },
-    { name: "Spider", emoji: "🕷️", maxHp: 150, attack: 8, speed: 3500, reward: { gold: 15, xp: 25 } },
-    { name: "Skeleton", emoji: "💀", maxHp: 200, attack: 12, speed: 3000, reward: { gold: 20, xp: 40 } },
-    { name: "Zombie", emoji: "🧟", maxHp: 300, attack: 15, speed: 2500, reward: { gold: 30, xp: 60 } },
-    { name: "Creeper", emoji: "💣", maxHp: 200, attack: 40, speed: 2000, reward: { gold: 50, xp: 100 } },
-    { name: "Ender Dragon", emoji: "🐉", maxHp: 1500, attack: 25, speed: 1500, reward: { gold: 500, xp: 1000 }, isBoss: true }
+    { 
+        name: "Slime", 
+        emoji: "🟩", 
+        maxHp: 100, 
+        attack: 5, 
+        speed: 4000, 
+        reward: { gold: 10, xp: 15 },
+        model: { file: "slime_1.glb", scale: 15.0, tint: { r: 0.4, g: 1, b: 0.4 }, intensity: 0.3 }
+    },
+    { 
+        name: "Spider", 
+        emoji: "🕷️", 
+        maxHp: 150, 
+        attack: 8, 
+        speed: 3500, 
+        reward: { gold: 15, xp: 25 },
+        model: { file: "ender_dragon.glb", scale: 0.08, tint: { r: 0.8, g: 0.2, b: 0.9 }, intensity: 0.5 }
+    },
+    { 
+        name: "Skeleton", 
+        emoji: "💀", 
+        maxHp: 200, 
+        attack: 12, 
+        speed: 3000, 
+        reward: { gold: 20, xp: 40 },
+        model: { file: "warden.glb", scale: 0.08, tint: { r: 0, g: 0.5, b: 0.7 }, intensity: 0.6 }
+    },
+    { 
+        name: "Zombie", 
+        emoji: "🧟", 
+        maxHp: 300, 
+        attack: 15, 
+        speed: 2500, 
+        reward: { gold: 30, xp: 60 },
+        model: { file: "skeleton_-_low_tier_enemy.glb", scale: 0.03, tint: { r: 0.9, g: 0.9, b: 0.9 }, intensity: 0.4 }
+    },
+    { 
+        name: "Creeper", 
+        emoji: "💣", 
+        maxHp: 200, 
+        attack: 40, 
+        speed: 2000, 
+        reward: { gold: 50, xp: 100 },
+        model: { file: "wither_storm.glb", scale: 0.02, tint: { r: 0.3, g: 0, b: 0.3 }, intensity: 0.8 }
+    },
+    { 
+        name: "Ender Dragon", 
+        emoji: "🐉", 
+        maxHp: 1500, 
+        attack: 25, 
+        speed: 1500, 
+        reward: { gold: 500, xp: 1000 }, 
+        isBoss: true,
+        model: { file: "ender_dragon.glb", scale: 0.15, tint: { r: 0.5, g: 0, b: 0.8 }, intensity: 0.8 }
+    }
 ];
 
 const lobbies = {}; // lobbyId -> { status, levelId, monster, currentWord, players, attackTimer }

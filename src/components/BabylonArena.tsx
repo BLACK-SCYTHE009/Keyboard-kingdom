@@ -17,9 +17,18 @@ interface BabylonArenaProps {
     attackDuration: number;
     playerAttackKey: number;
     monsterHitKey: number;
+    monsterData?: {
+        name: string;
+        model?: {
+            file: string;
+            scale: number;
+            tint: { r: number; g: number; b: number };
+            intensity: number;
+        };
+    };
 }
 
-export default function BabylonArena({ enemyName, isAttacking, isHit, character, attackKey, attackDuration, playerAttackKey, monsterHitKey }: BabylonArenaProps) {
+export default function BabylonArena({ enemyName, isAttacking, isHit, character, attackKey, attackDuration, playerAttackKey, monsterHitKey, monsterData }: BabylonArenaProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<Engine | null>(null);
     const sceneRef = useRef<Scene | null>(null);
@@ -46,7 +55,15 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
     useEffect(() => {
         if (typeof window === 'undefined' || !canvasRef.current) return;
         
-        const engine = new Engine(canvasRef.current, true, { preserveDrawingBuffer: true, stencil: true });
+        // Production-ready engine setup
+        const engine = new Engine(canvasRef.current, true, { 
+            preserveDrawingBuffer: true, 
+            stencil: true,
+            antialias: true,
+            alpha: true,
+            adaptToDeviceRatio: true,
+            powerPreference: 'high-performance'
+        });
         engineRef.current = engine;
         
         const scene = new Scene(engine);
@@ -107,10 +124,10 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
         ps.start();
         particleSystemRef.current = ps;
 
-        // Load HERO based on selection
+        // Load HERO based on selection - use better default model!
         let modelPath = "/models/heroes/";
-        let modelFile = "character_boy_1_fbx.glb";
-        let heroScale = 2.5;
+        let modelFile = "stella_girl.glb"; // Better looking default hero
+        let heroScale = 0.035;
 
         const lowerChar = character.toLowerCase();
         if (lowerChar.includes("stella")) { 
@@ -120,11 +137,13 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
             modelFile = "tomb_raider_laracroft.glb"; 
             heroScale = 0.04; 
         } else if (lowerChar.includes("female") || lowerChar.includes("realistic")) { 
-            modelFile = "realistic_female.glb"; 
-            heroScale = 2.5; // Adjusted scale for realistic_female
+            // Use better model instead of basic boy
+            modelFile = "stella_girl.glb";
+            heroScale = 0.035;
         } else if (lowerChar.includes("boy")) {
-            modelFile = "character_boy_1_fbx.glb";
-            heroScale = 2.5;
+            // Use better model for boy characters
+            modelFile = "stella_girl.glb";
+            heroScale = 0.035;
         } else if (character === "heroB") {
             modelPath = "https://models.babylonjs.com/";
             modelFile = "Ybot.glb";
@@ -141,6 +160,41 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
             root.position = new Vector3(-3, 0, 0);
             root.rotation = new Vector3(0, Math.PI / 2, 0);
             heroRootRef.current = root;
+
+            // Enhance hero model - make it look much better!
+            result.meshes.forEach(mesh => {
+                if (mesh.material) {
+                    const mat = mesh.material as any;
+                    if (mat.diffuseColor) {
+                        // Better colors for handsome hero
+                        if (modelFile.includes("stella")) {
+                            mat.diffuseColor = new Color3(0.9, 0.7, 1.0); // Bright purple/blue
+                            mat.specularColor = new Color3(0.4, 0.4, 0.5);
+                            mat.emissiveColor = new Color3(0.1, 0.05, 0.15);
+                        } else if (modelFile.includes("tomb_raider")) {
+                            mat.diffuseColor = new Color3(0.8, 0.6, 0.4); // Adventure brown
+                            mat.specularColor = new Color3(0.3, 0.3, 0.3);
+                            mat.emissiveColor = new Color3(0.05, 0.02, 0.01);
+                        } else {
+                            mat.diffuseColor = new Color3(0.7, 0.8, 0.9); // Cool steel blue
+                            mat.specularColor = new Color3(0.5, 0.5, 0.6);
+                            mat.emissiveColor = new Color3(0.05, 0.1, 0.2);
+                        }
+                    }
+                    if (mat.metallicF0Factor !== undefined) {
+                        mat.metallicF0Factor = 0.3; // More shine for heroic look
+                    }
+                    if (mat.roughness !== undefined) {
+                        mat.roughness = 0.4; // Smoother for better appearance
+                    }
+                }
+            });
+
+            // Add heroic glow that fits Minecraft aesthetic
+            const heroLight = new PointLight("heroLight", new Vector3(-3, 2, 0), scene);
+            heroLight.diffuse = new Color3(0.8, 0.9, 1.0); // Cool blue light
+            heroLight.intensity = 0.4;
+            heroLight.range = 3;
 
             result.animationGroups.forEach(ag => {
                 ag.stop();
@@ -163,42 +217,112 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
         };
     }, [character]);
 
-        // Load MONSTER with variety
+        // Load MONSTER with Minecraft-style blocky models
         useEffect(() => {
             if (!sceneRef.current || !enemyName) return;
             const scene = sceneRef.current;
     
             if (monsterRootRef.current) monsterRootRef.current.dispose(false, true);
     
-            let modelFile = "zombie.glb";
-            let scale = 1.0;
-            let tint = new Color3(1, 1, 1);
-            let intensity = 0.3;
+            // Use server-provided model data for authentic Minecraft look
+            let modelFile = "ender_dragon.glb"; // Default blocky boss
+            let scale = 0.15;
+            let tint = new Color3(0.5, 0, 0.8);
+            let intensity = 0.8;
             
-            const upperName = enemyName.toUpperCase();
-            if (upperName.includes("WITHER STORM")) { 
-                modelFile = "wither_storm.glb"; 
-                scale = 0.4; // MASSIVE
-                tint = new Color3(0.2, 0, 0.4); 
-                intensity = 1.5;
-            } 
-            else if (upperName.includes("WARDEN")) { modelFile = "warden.glb"; scale = 0.05; tint = new Color3(0, 0.5, 0.7); } 
-            else if (upperName.includes("WITHER") && !upperName.includes("STORM")) { modelFile = "wither_storm.glb"; scale = 0.12; tint = new Color3(0.3, 0, 0.3); }
-            else if (upperName.includes("ENDER DRAGON")) { modelFile = "ender_dragon.glb"; scale = 0.15; tint = new Color3(0.5, 0, 0.8); }
-            else if (upperName.includes("ZOMBIE")) { modelFile = "zombie.glb"; scale = 0.04; tint = new Color3(0.6, 1, 0.6); }
-            else if (upperName.includes("SKELETON")) { modelFile = "skeleton_-_low_tier_enemy.glb"; scale = 0.04; }
-            else if (upperName.includes("SLIME")) { modelFile = "slime_2.glb"; scale = 15.0; tint = new Color3(0.4, 1, 0.4); }
-            else if (upperName.includes("SPIDER")) { modelFile = "crystal_spider.glb"; scale = 0.04; tint = new Color3(1, 0.2, 0.2); }
-            else if (upperName.includes("PHANTOM") || upperName.includes("BLAZE")) { modelFile = "fallen_angel_demon_knight_with_dual_wings.glb"; scale = 0.04; tint = new Color3(1, 0.5, 0); }
-            else if (upperName.includes("CREEPER")) { modelFile = "demonic_horned_horror_knight.glb"; scale = 0.045; tint = new Color3(0, 1, 0); }
-            else if (upperName.includes("ENDERMAN") || upperName.includes("WITCH")) { modelFile = "black_gothic_skeleton_demon_knight.glb"; scale = 0.045; tint = new Color3(0.5, 0, 1); }
-            else if (upperName.includes("GHOST")) { modelFile = "fallen_angel_demon_knight_with_dual_wings.glb"; scale = 0.04; tint = new Color3(0.8, 0.8, 1); }
-            else if (upperName.includes("KNIGHT") || upperName.includes("DEMON") || upperName.includes("HORROR")) { modelFile = "demonic_horned_horror_knight.glb"; scale = 0.045; tint = new Color3(1, 0, 0); }
+            if (monsterData?.model) {
+                modelFile = monsterData.model.file;
+                scale = monsterData.model.scale;
+                tint = new Color3(monsterData.model.tint.r, monsterData.model.tint.g, monsterData.model.tint.b);
+                intensity = monsterData.model.intensity;
+            } else {
+                // Fallback: Name-based detection for compatibility
+                const upperName = enemyName.toUpperCase();
+                if (upperName.includes("WITHER STORM")) { 
+                    modelFile = "wither_storm.glb"; 
+                    scale = 0.4; 
+                    tint = new Color3(0.2, 0, 0.4); 
+                    intensity = 1.5;
+                } 
+                else if (upperName.includes("WARDEN")) { 
+                    modelFile = "warden.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0, 0, 0.5); 
+                    intensity = 0.6;
+                }
+                else if (upperName.includes("WITHER") && !upperName.includes("STORM")) { 
+                    modelFile = "wither_storm.glb"; 
+                    scale = 0.12; 
+                    tint = new Color3(0.3, 0, 0.3); 
+                    intensity = 0.8;
+                }
+                else if (upperName.includes("ENDER DRAGON")) { 
+                    modelFile = "ender_dragon.glb"; 
+                    scale = 0.15; 
+                    tint = new Color3(0.5, 0, 0.8); 
+                    intensity = 0.8;
+                }
+                else if (upperName.includes("ZOMBIE")) { 
+                    modelFile = "skeleton_-_low_tier_enemy.glb"; 
+                    scale = 0.03; 
+                    tint = new Color3(0.9, 0.9, 0.9); 
+                    intensity = 0.4;
+                }
+                else if (upperName.includes("SKELETON")) { 
+                    modelFile = "warden.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0, 0, 0.5); 
+                    intensity = 0.6;
+                }
+                else if (upperName.includes("SLIME")) { 
+                    modelFile = "slime_1.glb"; 
+                    scale = 15.0; 
+                    tint = new Color3(0.4, 1, 0.4); 
+                    intensity = 0.3;
+                }
+                else if (upperName.includes("SPIDER")) { 
+                    modelFile = "ender_dragon.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0.8, 0.2, 0.9); 
+                    intensity = 0.5;
+                }
+                else if (upperName.includes("CREEPER")) { 
+                    modelFile = "wither_storm.glb"; 
+                    scale = 0.02; 
+                    tint = new Color3(0.3, 0, 0.3); 
+                    intensity = 0.8;
+                }
+                else if (upperName.includes("PHANTOM") || upperName.includes("BLAZE")) { 
+                    modelFile = "ender_dragon.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0.8, 0.2, 0.9); 
+                    intensity = 0.5;
+                }
+                else if (upperName.includes("ENDERMAN") || upperName.includes("WITCH")) { 
+                    modelFile = "warden.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0, 0, 0.5); 
+                    intensity = 0.6;
+                }
+                else if (upperName.includes("GHOST")) { 
+                    modelFile = "ender_dragon.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0.8, 0.2, 0.9); 
+                    intensity = 0.5;
+                }
+                else if (upperName.includes("KNIGHT") || upperName.includes("DEMON") || upperName.includes("HORROR")) { 
+                    modelFile = "ender_dragon.glb"; 
+                    scale = 0.08; 
+                    tint = new Color3(0.8, 0.2, 0.9); 
+                    intensity = 0.5;
+                }
+            }
     
             SceneLoader.ImportMeshAsync("", "/models/mobs/", modelFile, scene).then((result) => {
                 const root = result.meshes[0];
                 
-                // Adjust position for huge models
+                // Adjust position for special models
+                const upperName = enemyName.toUpperCase();
                 const posZ = upperName.includes("STORM") ? 1 : 0;
                 const posY = upperName.includes("STORM") ? 3 : 0;
                 root.scaling = new Vector3(scale, scale, scale);
@@ -256,7 +380,7 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
 
                 monsterIdleRef.current?.play(true);
             });
-        }, [enemyName]);
+        }, [enemyName, monsterData]);
 
     // Animations
     useEffect(() => {

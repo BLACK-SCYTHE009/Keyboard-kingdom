@@ -6,7 +6,9 @@
     "dev": "node server.mjs",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server.mjs",
-    "lint": "eslint"
+    "lint": "eslint",
+    "vercel-build": "next build",
+    "deploy": "vercel --prod"
   },
   "dependencies": {
     "@babylonjs/core": "^9.0.0",
