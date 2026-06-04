@@ -27,6 +27,8 @@
 
 /* ─── Custom Properties ─── */
 :root {
+  --font-pixel: "Courier New", monospace;
+  --font-inter: Arial, sans-serif;
   --bg-dark: #0d1117;
   --bg-dark-card: #161b22;
   --bg-dark-surface: #21262d;
@@ -1046,4 +1048,3 @@ input:focus {
               radial-gradient(ellipse at 50% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
               #0a0a1a;
 }
-
