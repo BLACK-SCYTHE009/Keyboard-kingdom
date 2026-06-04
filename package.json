@@ -13,10 +13,10 @@
   "dependencies": {
     "@babylonjs/core": "^9.0.0",
     "@babylonjs/loaders": "^9.0.0",
-    "@prisma/client": "^5.22.0",
+    "@clerk/nextjs": "^7.4.3",
+    "@supabase/supabase-js": "^2.107.0",
     "bcryptjs": "^3.0.3",
     "next": "16.2.1",
-    "next-auth": "^4.24.13",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "socket.io": "^4.8.3",
@@ -31,7 +31,6 @@
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
-    "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

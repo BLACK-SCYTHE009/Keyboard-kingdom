@@ -585,3 +585,465 @@ input:focus {
     animation: none;
   }
 }
+
+/* ═══════════════════════════════════════
+   PREMIUM LOGIN UI — GLASSMORPHISM SYSTEM
+   ═══════════════════════════════════════ */
+
+/* ── Glassmorphism Panel ── */
+.glass-panel {
+  background: rgba(15, 15, 35, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.glass-panel-inner {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+/* ── Animated Gradient Button ── */
+.gradient-btn {
+  position: relative;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: white;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.gradient-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4), 0 0 60px rgba(236, 72, 153, 0.15);
+}
+
+.gradient-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.gradient-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gradient-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+  background-size: 200% 200%;
+  animation: shimmer-btn 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer-btn {
+  0% { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* ── Secondary / Outline Button ── */
+.outline-btn {
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.outline-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: white;
+}
+
+/* ── Modern Input Fields ── */
+.modern-input {
+  width: 100%;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: white;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+  text-shadow: none;
+}
+
+.modern-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 400;
+}
+
+.modern-input:focus {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  background: rgba(139, 92, 246, 0.06);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.1) !important;
+}
+
+.modern-input-error {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+}
+
+.modern-textarea {
+  resize: none;
+  min-height: 80px;
+}
+
+/* ── Step Indicator ── */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-inter), sans-serif;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  text-shadow: none;
+}
+
+.step-dot-inactive {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.step-dot-active {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  color: white;
+  border: 2px solid transparent;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(236, 72, 153, 0.15);
+  transform: scale(1.15);
+}
+
+.step-dot-completed {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  color: white;
+  border: 2px solid transparent;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  transition: background 0.4s ease;
+}
+
+.step-line-inactive {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.step-line-active {
+  background: linear-gradient(90deg, #10B981, #8B5CF6);
+}
+
+/* ── Gender Pill Selector ── */
+.gender-pill {
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-shadow: none;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gender-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.gender-pill-selected {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  background: rgba(139, 92, 246, 0.12) !important;
+  color: white !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  transform: scale(1.05);
+}
+
+/* ── Profile Picture Upload ── */
+.profile-upload {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.profile-upload:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.06);
+  transform: scale(1.05);
+}
+
+.profile-upload-filled {
+  border-style: solid;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.profile-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Avatar / Hero Card ── */
+.avatar-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-card-selected {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  background: rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2), 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-4px) scale(1.03);
+}
+
+.avatar-card-selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  text-shadow: none;
+}
+
+.avatar-card .avatar-emoji {
+  font-size: 40px;
+  margin-bottom: 8px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.avatar-card .avatar-name {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  text-shadow: none;
+  margin-bottom: 2px;
+}
+
+.avatar-card .avatar-desc {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  text-shadow: none;
+}
+
+/* ── Floating Orb Particles ── */
+.login-orbs {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.15;
+  animation: orb-float linear infinite;
+}
+
+@keyframes orb-float {
+  0% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -50px) scale(1.1); }
+  50% { transform: translate(-20px, -100px) scale(0.9); }
+  75% { transform: translate(40px, -50px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ── Step Transitions ── */
+.step-fade-in {
+  animation: step-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes step-fade-in {
+  0% { opacity: 0; transform: translateX(20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.step-fade-out {
+  animation: step-fade-out 0.2s ease-in both;
+}
+
+@keyframes step-fade-out {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-20px); }
+}
+
+/* ── Login Title Gradient ── */
+.login-title-gradient {
+  background: linear-gradient(135deg, #c4b5fd 0%, #f0abfc 40%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+/* ── Auth Mode Switch ── */
+.auth-switch-link {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  text-shadow: none;
+  transition: color 0.2s ease;
+}
+
+.auth-switch-link span {
+  color: rgba(139, 92, 246, 0.8);
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.auth-switch-link span:hover {
+  color: #a78bfa;
+}
+
+/* ── Error Alert ── */
+.login-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  color: #fca5a5;
+  text-shadow: none;
+  animation: error-shake 0.5s ease-in-out;
+}
+
+/* ── Preset Avatar Circles ── */
+.preset-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: rgba(255,255,255,0.03);
+}
+
+.preset-avatar:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  transform: scale(1.1);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.preset-avatar-selected {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  background: rgba(139, 92, 246, 0.15) !important;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+/* ── Coming Soon Badge ── */
+.coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 50px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4b5fd;
+  text-shadow: none;
+}
+
+/* ── Login Background ── */
+.login-bg {
+  background: radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+              #0a0a1a;
+}
+

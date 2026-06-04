@@ -218,7 +218,7 @@ function saveGameData(data: Partial<SaveData>) {
 // ═══════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════
-export default function GameClient({ mode, username, character = "heroA" }: { mode: 'singleplayer' | 'random', username: string, character?: string }) {
+export default function GameClient({ mode, username, userId, character = "heroA" }: { mode: 'singleplayer' | 'random', username: string, userId: string, character?: string }) {
     const router = useRouter();
     const audioCtxRef = useRef<AudioContext | null>(null);
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -415,7 +415,7 @@ export default function GameClient({ mode, username, character = "heroA" }: { mo
         if (mode !== 'random') return;
         const newSocket = io();
         setSocket(newSocket);
-        newSocket.emit('join_lobby', { lobbyId: "random_global", username });
+        newSocket.emit('join_lobby', { lobbyId: "random_global", username, userId });
         newSocket.on('game_sync', (data) => {
             setScreen(data.status === 'playing' ? 'playing' : 'waiting');
             if (data.monster) setMonster(data.monster);

@@ -1,41 +1,37 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import { upsertUserProfile } from "@/lib/profiles";
 
 export async function POST(req: Request) {
-    try {
-        const { username, password, character, avatar } = await req.json();
+  const { userId } = await auth();
 
-        if (!username || !password) {
-            return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
-        }
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-        if (password.length < 3) {
-            return NextResponse.json({ error: 'Password must be at least 3 characters' }, { status: 400 });
-        }
+  try {
+    const body = await req.json();
+    const username = String(body.username || "").trim();
 
-        const existingUser = await prisma.user.findUnique({
-            where: { username }
-        });
-
-        if (existingUser) {
-            return NextResponse.json({ error: 'Username already taken' }, { status: 409 });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await prisma.user.create({
-            data: {
-                username,
-                password: hashedPassword,
-                character: character || "heroA",
-                avatar: avatar || "1"
-            }
-        });
-
-        return NextResponse.json({ message: 'User created successfully', user: { id: user.id, username: user.username } }, { status: 201 });
-    } catch (error) {
-        console.error('Signup error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (!username) {
+      return NextResponse.json({ error: "Username is required" }, { status: 400 });
     }
+
+    const profile = await upsertUserProfile(userId, {
+      username,
+      displayName: body.displayName,
+      age: body.age,
+      gender: body.gender,
+      bio: body.bio,
+      profilePicture: body.profilePicture,
+      character: body.character,
+      avatar: body.avatar,
+    });
+
+    return NextResponse.json({ profile }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    console.error("Profile upsert error:", error);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

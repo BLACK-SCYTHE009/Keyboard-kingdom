@@ -163,8 +163,8 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
 
             // Enhance hero model - make it look much better!
             result.meshes.forEach(mesh => {
-                if (mesh.material) {
-                    const mat = mesh.material as any;
+                if (mesh.material instanceof StandardMaterial) {
+                    const mat = mesh.material;
                     if (mat.diffuseColor) {
                         // Better colors for handsome hero
                         if (modelFile.includes("stella")) {
@@ -181,12 +181,7 @@ export default function BabylonArena({ enemyName, isAttacking, isHit, character,
                             mat.emissiveColor = new Color3(0.05, 0.1, 0.2);
                         }
                     }
-                    if (mat.metallicF0Factor !== undefined) {
-                        mat.metallicF0Factor = 0.3; // More shine for heroic look
-                    }
-                    if (mat.roughness !== undefined) {
-                        mat.roughness = 0.4; // Smoother for better appearance
-                    }
+                    mat.specularPower = 48;
                 }
             });
 

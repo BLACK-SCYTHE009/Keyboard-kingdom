@@ -1,34 +1,33 @@
 import type { Metadata } from "next";
-import { Press_Start_2P } from "next/font/google";
-import "./globals.css";
-import AuthProvider from "@/components/AuthProvider";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Inter, Press_Start_2P } from "next/font/google";
 import SettingsProvider from "@/components/SettingsProvider";
+import "./globals.css";
 
 const pressStart = Press_Start_2P({
-  weight: '400',
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-pixel"
+  variable: "--font-pixel",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
   title: "Keyboard Kingdom",
-  description: "A multiplayer typing RPG — type to conquer, fight to survive.",
+  description: "A multiplayer typing RPG where every word is an attack.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${pressStart.variable} antialiased bg-[#0d1117] text-white font-pixel h-screen w-screen overflow-hidden`}>
-        <AuthProvider>
-          <SettingsProvider>
-            {children}
-          </SettingsProvider>
-        </AuthProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${pressStart.variable} ${inter.variable} h-screen w-screen overflow-hidden bg-[#0d1117] font-pixel text-white antialiased`}>
+          <SettingsProvider>{children}</SettingsProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

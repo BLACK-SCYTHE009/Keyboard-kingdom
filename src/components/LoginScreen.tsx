@@ -1,322 +1,392 @@
 "use client";
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useSettings } from "@/components/SettingsProvider";
 
-const FIREFLIES = Array.from({ length: 20 }, (_, i) => ({
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: `${2 + Math.random() * 3}px`,
-    duration: `${3 + Math.random() * 4}s`,
-    delay: `${Math.random() * 2}s`
-}));
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSignIn, useSignUp } from "@clerk/nextjs";
 
-const GRASS_BLADES = Array.from({ length: 150 }, (_, i) => ({
-    left: `${(i / 150) * 100}%`,
-    height: `${30 + Math.random() * 40}px`,
-    animationDelay: `${Math.random() * 2}s`,
-    animationDuration: `${2 + Math.random() * 2}s`
-}));
+const HEROES = [
+  { id: "heroA", name: "Knight", desc: "Balanced sword fighter" },
+  { id: "heroB", name: "Ranger", desc: "Fast and precise" },
+  { id: "stella", name: "Stella", desc: "Mystic striker" },
+  { id: "tomb_raider_laracroft", name: "Adventurer", desc: "Elite explorer" },
+  { id: "realistic_female", name: "Warrior", desc: "Legendary champion" },
+];
+
+const PRESET_AVATARS = ["Mage", "Ninja", "Farmer", "King", "Queen", "Hero", "Elf", "Vamp"];
+const TOTAL_STEPS = 4;
+
+function getErrorMessage(error: unknown) {
+  if (typeof error === "object" && error && "errors" in error) {
+    const clerkError = error as { errors?: Array<{ message?: string; longMessage?: string }> };
+    return clerkError.errors?.[0]?.longMessage || clerkError.errors?.[0]?.message || "Authentication failed";
+  }
+
+  return error instanceof Error ? error.message : "Authentication failed";
+}
 
 export default function LoginScreen() {
-    const [isLogin, setIsLogin] = useState(true);
-    const [step, setStep] = useState(1); // For Signup: 1=Creds, 2=Avatar, 3=Character
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [avatar, setAvatar] = useState("1");
-    const [character, setCharacter] = useState("heroA");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    
-    const { particles } = useSettings();
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { signIn, fetchStatus: signInFetchStatus } = useSignIn();
+  const { signUp, fetchStatus: signUpFetchStatus } = useSignUp();
 
-    const handleAuth = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!isLogin && step < 3) {
-            setStep(s => s + 1);
-            return;
-        }
+  const [isLogin, setIsLogin] = useState(true);
+  const [step, setStep] = useState(1);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("other");
+  const [bio, setBio] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
+  const [presetAvatar, setPresetAvatar] = useState("Mage");
+  const [character, setCharacter] = useState("heroA");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [particles, setParticles] = useState<Array<{ left: string; top: string; size: string; duration: string; delay: string }>>([]);
 
-        setLoading(true);
-        setError("");
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 22 }, () => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        size: `${2 + Math.random() * 4}px`,
+        duration: `${4 + Math.random() * 5}s`,
+        delay: `${Math.random() * 2}s`,
+      })),
+    );
+  }, []);
 
-        if (isLogin) {
-            const res = await signIn("credentials", { username, password, redirect: false });
-            if (res?.error) {
-                setError("Invalid username or password");
-                setLoading(false);
-            } else {
-                window.location.href = "/";
-            }
-        } else {
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, avatar, character })
-            });
+  const validateCredentials = () => {
+    if (!username.trim()) return "Username is required";
+    if (username.trim().length < 2) return "Username must be at least 2 characters";
+    if (!password) return "Password is required";
+    if (password.length < 3) return "Password must be at least 3 characters";
+    if (!isLogin && password !== confirmPassword) return "Passwords do not match";
+    return null;
+  };
 
-            if (res.ok) {
-                await signIn("credentials", { username, password, callbackUrl: "/" });
-            } else {
-                const data = await res.json();
-                setError(data.error || "Signup failed");
-                setLoading(false);
-                setStep(1);
-            }
-        }
+  const handleFile = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Image must be under 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfilePicture(String(reader.result || ""));
+      setPresetAvatar("");
     };
+    reader.readAsDataURL(file);
+  }, []);
 
-    return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-classy bg-cover bg-center z-50 overflow-hidden text-center backdrop-blur-sm">
-            
-            {/* ── Background Animations ── */}
-            {particles && (
-                <>
-                    <div className="fireflies">
-                        {FIREFLIES.map((f, i) => (
-                            <div key={i} className="absolute rounded-full bg-yellow-300 pointer-events-none"
-                                 style={{ 
-                                     left: f.left, top: f.top, width: f.size, height: f.size,
-                                     boxShadow: '0 0 8px rgba(255, 255, 0, 0.8)',
-                                     animation: `bounce ${f.duration} ease-in-out infinite alternate`,
-                                     animationDelay: f.delay
-                                 }}>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grass-container pointer-events-none z-10 w-full absolute bottom-0 h-48">
-                        {GRASS_BLADES.map((g) => (
-                            <div className="grass-blade absolute bottom-0 w-2 bg-gradient-to-t from-green-900 to-[#55AA55] origin-bottom rounded-t-full"
-                                 key={g.left}
-                                 style={{ 
-                                     left: g.left,
-                                     height: g.height,
-                                     animationDelay: g.animationDelay,
-                                     animationDuration: g.animationDuration
-                                 }}>
-                            </div>
-                        ))}
-                    </div>
-                </>
+  const saveProfile = async () => {
+    const finalCharacter = character === "heroA" && gender === "female" ? "stella" : character;
+    const response = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username.trim(),
+        displayName: displayName.trim() || username.trim(),
+        age: age || null,
+        gender,
+        bio,
+        profilePicture: profilePicture || presetAvatar,
+        character: finalCharacter,
+        avatar: presetAvatar || "1",
+      }),
+    });
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error || "Failed to save profile.");
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+
+    const credentialsError = validateCredentials();
+    if (credentialsError) {
+      setError(credentialsError);
+      return;
+    }
+
+    if (!isLogin && step < TOTAL_STEPS) {
+      setStep((current) => current + 1);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        if (!signIn) throw new Error("Clerk is still loading.");
+        const createResult = await signIn.create({ identifier: username.trim() });
+        if (createResult.error) throw new Error(createResult.error.message);
+
+        const passwordResult = await signIn.password({ password });
+        if (passwordResult.error) throw new Error(passwordResult.error.message);
+
+        if (signIn.status !== "complete") {
+          throw new Error("This sign-in needs another verification step.");
+        }
+
+        const finalizeResult = await signIn.finalize();
+        if (finalizeResult.error) throw new Error(finalizeResult.error.message);
+      } else {
+        if (!signUp) throw new Error("Clerk is still loading.");
+        const createResult = await signUp.create({ username: username.trim(), password });
+        if (createResult.error) throw new Error(createResult.error.message);
+
+        if (signUp.status !== "complete") {
+          throw new Error(`Signup needs another verification step: ${signUp.status}`);
+        }
+
+        const finalizeResult = await signUp.finalize();
+        if (finalizeResult.error) throw new Error(finalizeResult.error.message);
+        await saveProfile();
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch (authError) {
+      setError(getErrorMessage(authError));
+      setLoading(false);
+    }
+  };
+
+  const setMode = (loginMode: boolean) => {
+    setIsLogin(loginMode);
+    setStep(1);
+    setError("");
+  };
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center overflow-hidden bg-classy bg-cover bg-center px-4 text-center">
+      <div className="fireflies">
+        {particles.map((particle, index) => (
+          <div
+            key={index}
+            className="absolute rounded-full bg-yellow-300"
+            style={{
+              left: particle.left,
+              top: particle.top,
+              width: particle.size,
+              height: particle.size,
+              boxShadow: "0 0 8px rgba(255, 255, 0, 0.8)",
+              animation: `bounce ${particle.duration} ease-in-out infinite alternate`,
+              animationDelay: particle.delay,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="slide-in-top relative z-20 flex w-full max-w-md flex-col items-center">
+        <h1 className="mb-2 text-center text-3xl tracking-widest text-epic-gold text-shadow-drop md:text-4xl">
+          KEYBOARD KINGDOM
+        </h1>
+        <div className="blocky-border-inner mb-6 bg-black/70 px-6 py-2 text-[9px] tracking-widest text-gray-300">
+          {isLogin ? "RETURN TO THE REALM" : `STEP ${step} OF ${TOTAL_STEPS}`}
+        </div>
+
+        <div className="stone-panel relative w-full max-w-[390px] overflow-hidden p-5 shadow-2xl lg:p-7">
+          <div className="relative z-10 mb-5 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setMode(true)}
+              className={`blocky-border flex-1 py-3 text-[9px] font-bold tracking-wider transition-all ${
+                isLogin ? "bg-[#8B5A2B] text-gold" : "bg-[#2a2a2a] text-gray-500 hover:bg-[#333]"
+              }`}
+            >
+              LOG IN
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode(false)}
+              className={`blocky-border flex-1 py-3 text-[9px] font-bold tracking-wider transition-all ${
+                !isLogin ? "bg-[#8B5A2B] text-gold" : "bg-[#2a2a2a] text-gray-500 hover:bg-[#333]"
+              }`}
+            >
+              SIGN UP
+            </button>
+          </div>
+
+          {!isLogin && (
+            <div className="relative z-10 mb-5 flex justify-between">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="flex flex-1 items-center">
+                  <div
+                    className={`flex h-7 w-7 items-center justify-center border-2 text-[8px] font-bold transition-all ${
+                      step > item
+                        ? "border-emerald-400 bg-emerald-600 text-white"
+                        : step === item
+                          ? "scale-110 border-gold bg-gold/30 text-gold"
+                          : "border-gray-700 bg-black/40 text-gray-600"
+                    }`}
+                  >
+                    {step > item ? "OK" : item}
+                  </div>
+                  {item < 4 && <div className={`mx-1 h-1 flex-1 ${step > item ? "bg-emerald-500" : "bg-black/40"}`} />}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="error-shake relative z-10 mb-3 border-2 border-red-900 bg-red-950/80 p-3 text-center text-[9px] font-bold text-red-400">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3">
+            {(isLogin || step === 1) && (
+              <div className="fade-in flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder={isLogin ? "USERNAME" : "CHOOSE USERNAME"}
+                  required
+                  autoComplete="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  className="w-full border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner transition-colors focus:outline-none"
+                />
+                <input
+                  type="password"
+                  placeholder={isLogin ? "PASSWORD" : "CREATE PASSWORD"}
+                  required
+                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="w-full border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner transition-colors focus:outline-none"
+                />
+                {!isLogin && (
+                  <input
+                    type="password"
+                    placeholder="CONFIRM PASSWORD"
+                    required
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    className="w-full border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner transition-colors focus:outline-none"
+                  />
+                )}
+              </div>
             )}
 
-            {/* ── Main UI Component ── */}
-            <div className="relative z-20 flex flex-col items-center w-full max-w-md transition-transform duration-200 ease-out slide-in-top">
-                
-                {/* Title */}
-                <h1 className="text-4xl text-epic-gold mb-3 text-shadow-drop tracking-widest scale-in text-center"
-                    style={{ '--delay': '0.1s' } as React.CSSProperties}>
-                    KEYBOARD KINGDOM
-                </h1>
-                
-                {/* Info Text */}
-                <div className="px-6 py-2 bg-black/70 blocky-border-inner text-[10px] text-gray-300 mb-8 tracking-widest fade-in-up"
-                     style={{ '--delay': '0.3s' } as React.CSSProperties}>
-                    TYPE TO CONQUER · FIGHT TO SURVIVE
+            {!isLogin && step === 2 && (
+              <div className="fade-in flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="DISPLAY NAME"
+                  autoComplete="off"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  className="w-full border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner"
+                />
+                <input
+                  type="number"
+                  placeholder="AGE"
+                  min="1"
+                  max="120"
+                  value={age}
+                  onChange={(event) => setAge(event.target.value)}
+                  className="w-full border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  {["male", "female", "other"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setGender(option)}
+                      className={`blocky-border py-3 text-[8px] font-bold uppercase tracking-wider transition-all ${
+                        gender === option ? "bg-[#8B5A2B] text-gold" : "bg-[#2a2a2a] text-gray-500 hover:bg-[#333]"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
                 </div>
+                <textarea
+                  placeholder="SHORT BIO (OPTIONAL)"
+                  maxLength={150}
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  className="h-16 w-full resize-none border-2 border-b-gray-700 border-l-black border-r-gray-700 border-t-black bg-[#1a1a1a] p-4 text-[10px] text-gray-200 shadow-inner"
+                />
+              </div>
+            )}
 
-                {/* Authentication Panel */}
-                <div className="stone-panel w-full max-w-[320px] p-6 lg:p-8 fade-in-up relative overflow-hidden shadow-2xl min-h-[400px]"
-                     style={{ '--delay': '0.4s' } as React.CSSProperties}>
-                    
-                    {/* Shadow detailing */}
-                    <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] border border-white/5"></div>
-
-                    {/* Auth Toggle Tabs */}
-                    <div className="flex gap-2 mb-6 relative z-10">
-                        <button
-                            onClick={() => { setIsLogin(true); setError(""); setStep(1); }}
-                            className={`flex-1 py-3 text-[10px] font-bold tracking-wider transition-all duration-300 border-2 blocky-border ${
-                                isLogin
-                                    ? 'bg-[#8B5A2B] text-gold border-[#5c3a1a] shadow-[inset_0_4px_10px_rgba(255,255,255,0.1)]'
-                                    : 'bg-[#2a2a2a] text-gray-500 border-[#1a1a1a] hover:bg-[#333]'
-                            }`}
-                        >
-                            LOG IN
-                        </button>
-                        <button
-                            onClick={() => { setIsLogin(false); setError(""); setStep(1); }}
-                            className={`flex-1 py-3 text-[10px] font-bold tracking-wider transition-all duration-300 border-2 blocky-border ${
-                                !isLogin
-                                    ? 'bg-[#8B5A2B] text-gold border-[#5c3a1a] shadow-[inset_0_4px_10px_rgba(255,255,255,0.1)]'
-                                    : 'bg-[#2a2a2a] text-gray-500 border-[#1a1a1a] hover:bg-[#333]'
-                            }`}
-                        >
-                            SIGN UP
-                        </button>
-                    </div>
-
-                    {/* Form Component */}
-                    <form onSubmit={handleAuth} className="flex flex-col gap-4 relative z-10 w-full h-full">
-                        {error && (
-                            <div className="text-red-400 text-[10px] font-bold text-center bg-red-950/80 p-3 border-2 border-red-900 error-shake mb-2">
-                                ⚠️ {error}
-                            </div>
-                        )}
-
-                        {/* Step Indicator for Signup */}
-                        {!isLogin && (
-                            <div className="flex justify-between mb-4 scale-in">
-                                {[1, 2, 3].map(s => (
-                                    <div key={s} className={`h-1.5 flex-1 mx-0.5 rounded-full ${step >= s ? 'bg-gold shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'bg-black/50'}`}></div>
-                                ))}
-                            </div>
-                        )}
-
-                        {(isLogin || step === 1) && (
-                            <div className="flex flex-col gap-4 fade-in">
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[12px] opacity-60">👤</span>
-                                    <input
-                                        type="text" placeholder="USERNAME" required autoComplete="off"
-                                        value={username} onChange={e => setUsername(e.target.value)}
-                                        className="w-full bg-[#1a1a1a] text-gray-200 text-[10px] md:text-xs p-4 pl-9 border-2 border-t-black border-l-black border-b-gray-700 border-r-gray-700 focus:outline-none focus:border-yellow-600 transition-colors shadow-inner"
-                                    />
-                                </div>
-
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[12px] opacity-60">🔒</span>
-                                    <input
-                                        type="password" placeholder="PASSWORD" required autoComplete="new-password"
-                                        value={password} onChange={e => setPassword(e.target.value)}
-                                        className="w-full bg-[#1a1a1a] text-gray-200 text-[10px] md:text-xs p-4 pl-9 border-2 border-t-black border-l-black border-b-gray-700 border-r-gray-700 focus:outline-none focus:border-yellow-600 transition-colors shadow-inner"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {!isLogin && step === 2 && (
-                            <div className="flex flex-col gap-3 fade-in">
-                                <div className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Select Avatar</div>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {["1", "2", "3", "4"].map(id => (
-                                        <button
-                                            key={id} type="button"
-                                            onClick={() => setAvatar(id)}
-                                            className={`aspect-square p-2 blocky-border transition-all duration-200 ${avatar === id ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                        >
-                                            <div className="w-full h-full flex items-center justify-center text-3xl">
-                                                {id === "1" ? "🧙" : id === "2" ? "🥷" : id === "3" ? "🧑‍🌾" : "🤴"}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {!isLogin && step === 3 && (
-                            <div className="flex flex-col gap-3 fade-in">
-                                <div className="text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Choose Your Hero</div>
-                                <div className="grid grid-cols-3 gap-3 mb-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCharacter("heroA")}
-                                        className={`p-3 blocky-border transition-all duration-200 ${character === "heroA" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <div className="text-2xl mb-1">🤺</div>
-                                        <div className="text-[8px] text-white">Knight</div>
-                                        <div className="text-[6px] text-gray-400">Classic Hero</div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCharacter("heroB")}
-                                        className={`p-3 blocky-border transition-all duration-200 ${character === "heroB" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <div className="text-2xl mb-1">🏹</div>
-                                        <div className="text-[8px] text-white">Ranger</div>
-                                        <div className="text-[6px] text-gray-400">Swift Hero</div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCharacter("stella")}
-                                        className={`p-3 blocky-border transition-all duration-200 ${character === "stella" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <div className="text-2xl mb-1">👸</div>
-                                        <div className="text-[8px] text-white">Stella</div>
-                                        <div className="text-[6px] text-gray-400">Mystic Hero</div>
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCharacter("tomb_raider_laracroft")}
-                                        className={`p-3 blocky-border transition-all duration-200 ${character === "tomb_raider_laracroft" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <div className="text-2xl mb-1">🗡️</div>
-                                        <div className="text-[8px] text-white">Adventurer</div>
-                                        <div className="text-[6px] text-gray-400">Elite Hero</div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCharacter("realistic_female")}
-                                        className={`p-3 blocky-border transition-all duration-200 ${character === "realistic_female" ? 'bg-gold/20 border-gold shadow-[0_0_15px_rgba(212,175,55,0.3)]' : 'bg-black/40 border-gray-700 opacity-60 hover:opacity-100'}`}
-                                    >
-                                        <div className="text-2xl mb-1">🦸</div>
-                                        <div className="text-[8px] text-white">Warrior</div>
-                                        <div className="text-[6px] text-gray-400">Legendary Hero</div>
-                                    </button>
-                                </div>
-                                <div className="text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            // Clear all previous login data
-                                            if (typeof window !== 'undefined') {
-                                                localStorage.clear();
-                                                sessionStorage.clear();
-                                                // Clear NextAuth session
-                                                document.cookie.split(";").forEach(cookie => {
-                                                    const eqPos = cookie.indexOf("=");
-                                                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-                                                    if (name.startsWith("next-auth") || name.startsWith("__Secure")) {
-                                                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-                                                    }
-                                                });
-                                            }
-                                        }}
-                                        className="bg-red-600 hover:bg-red-700 text-white text-[9px] px-3 py-2 blocky-border mb-4 transition-colors"
-                                    >
-                                        🗑️ Clear All Data
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-auto flex gap-2">
-                            {!isLogin && step > 1 && (
-                                <button
-                                    type="button" onClick={() => setStep(s => s - 1)}
-                                    className="bg-gray-700 hover:bg-gray-600 text-white text-[9px] px-4 py-4 blocky-border transition-colors"
-                                >
-                                    BACK
-                                </button>
-                            )}
-                            <button
-                                type="submit" disabled={loading}
-                                className="wood-btn flex-1 py-4 text-[11px] tracking-wider text-white font-bold opacity-100 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-200"></div>
-                                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-md">
-                                    {loading ? (
-                                        <>CONNECTING<span className="loading-dots"></span></>
-                                    ) : (
-                                        isLogin ? "⚔️ JOIN REALM" : (step === 3 ? "✨ FINALIZE" : "NEXT →")
-                                    )}
-                                </span>
-                            </button>
-                        </div>
-                    </form>
+            {!isLogin && step === 3 && (
+              <div className="fade-in flex flex-col items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-dashed border-gray-600 bg-[#1a1a1a] text-[9px] text-gray-400 transition-all hover:scale-105 hover:border-gold/50"
+                >
+                  {profilePicture ? <img src={profilePicture} alt="Profile" className="h-full w-full object-cover" /> : presetAvatar || "UPLOAD"}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                <div className="grid w-full grid-cols-4 gap-2">
+                  {PRESET_AVATARS.map((avatar) => (
+                    <button
+                      key={avatar}
+                      type="button"
+                      onClick={() => {
+                        setPresetAvatar(avatar);
+                        setProfilePicture("");
+                      }}
+                      className={`blocky-border aspect-square p-2 text-[8px] transition-all ${
+                        presetAvatar === avatar ? "border-gold bg-gold/20" : "border-gray-700 bg-black/40 opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      {avatar}
+                    </button>
+                  ))}
                 </div>
+              </div>
+            )}
 
-                <div className="fade-in-up mt-8 text-[8px] text-gray-400 font-bold opacity-60 tracking-widest"
-                     style={{ '--delay': '0.8s' } as React.CSSProperties}>
-                    v1.0.2 · PERSONALIZED EDITION
+            {!isLogin && step === 4 && (
+              <div className="fade-in flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-2">
+                  {HEROES.map((hero) => (
+                    <button
+                      key={hero.id}
+                      type="button"
+                      onClick={() => setCharacter(hero.id)}
+                      className={`blocky-border p-3 text-left transition-all ${
+                        character === hero.id ? "border-gold bg-gold/20" : "border-gray-700 bg-black/40 opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="text-[9px] text-white">{hero.name}</div>
+                      <div className="mt-1 text-[6px] text-gray-400">{hero.desc}</div>
+                    </button>
+                  ))}
                 </div>
+              </div>
+            )}
+
+            <div className="mt-2 flex gap-2">
+              {!isLogin && step > 1 && (
+                <button type="button" onClick={() => setStep((current) => Math.max(1, current - 1))} className="blocky-border bg-gray-700 px-4 py-4 text-[9px] text-white hover:bg-gray-600">
+                  BACK
+                </button>
+              )}
+              <button type="submit" disabled={loading || signInFetchStatus === "fetching" || signUpFetchStatus === "fetching"} className="wood-btn flex-1 py-4 text-[10px] font-bold tracking-wider text-white disabled:cursor-not-allowed disabled:opacity-50">
+                {loading ? "CONNECTING..." : isLogin ? "JOIN REALM" : step === TOTAL_STEPS ? "BEGIN ADVENTURE" : "NEXT STEP"}
+              </button>
             </div>
-            
-            {/* ── Settings Initializer Overlap Fix ── */}
-            <div className="absolute top-4 right-4 pointer-events-none opacity-0"></div>
+          </form>
         </div>
-    );
+
+        <div className="fade-in-up mt-6 text-[7px] font-bold tracking-widest text-gray-400 opacity-60">V2.0 CLERK + SUPABASE EDITION</div>
+      </div>
+    </div>
+  );
 }

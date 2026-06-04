@@ -8,6 +8,15 @@ interface LoadedModel {
   refCount: number;
 }
 
+type LoadTask = {
+  modelPath: string;
+  modelFile: string;
+  scene: Scene;
+  priority: number;
+  resolve: (model: LoadedModel) => void;
+  reject: (error: unknown) => void;
+};
+
 class ModelCache {
   private cache = new Map<string, LoadedModel>();
   private maxCacheSize = 50; // Maximum models to keep in memory
@@ -118,7 +127,7 @@ class ModelCache {
   private estimateMemoryUsage(): string {
     // Rough estimation based on mesh count and complexity
     let totalVertices = 0;
-    let totalFaces = 0;
+    const totalFaces = 0;
     
     this.cache.forEach(model => {
       if (model.mesh) {
@@ -150,14 +159,7 @@ export const modelCache = new ModelCache();
 
 // Progressive loading utility
 export class ProgressiveModelLoader {
-  private loadQueue: Array<{
-    modelPath: string;
-    modelFile: string;
-    scene: Scene;
-    priority: number;
-    resolve: (model: LoadedModel) => void;
-    reject: (error: any) => void;
-  }> = [];
+  private loadQueue: LoadTask[] = [];
 
   private loading = false;
   private maxConcurrentLoads = 2;
@@ -207,7 +209,7 @@ export class ProgressiveModelLoader {
     }
   }
 
-  private async processLoadTask(task: any) {
+  private async processLoadTask(task: LoadTask) {
     try {
       const model = await modelCache.loadModel(task.modelPath, task.modelFile, task.scene);
       task.resolve(model);

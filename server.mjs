@@ -2,9 +2,15 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
+import nextEnv from '@next/env';
 
-const prisma = new PrismaClient();
+const { loadEnvConfig } = nextEnv;
+loadEnvConfig(process.cwd());
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
@@ -137,11 +143,16 @@ app.prepare().then(() => {
       
       const reward = lobby.monster.reward;
       
-      // Update Prisma users
+      // Update Supabase users
       for (const p of Object.values(lobby.players)) {
           if (p.isAlive && p.dbId) {
               try {
-                  const dbUser = await prisma.user.findUnique({ where: { id: p.dbId } });
+                  const { data: dbUser } = await supabase
+                      .from('users')
+                      .select('*')
+                      .eq('id', p.dbId)
+                      .single();
+                  
                   if (dbUser) {
                       const newXp = dbUser.xp + reward.xp;
                       const nextLevelXp = Math.floor(100 * Math.pow(1.5, dbUser.level - 1));
@@ -150,18 +161,18 @@ app.prepare().then(() => {
                           newLevel++;
                       }
                       
-                      await prisma.user.update({
-                          where: { id: p.dbId },
-                          data: { 
+                      await supabase
+                          .from('users')
+                          .update({ 
                               xp: newXp, 
                               level: newLevel 
-                          }
-                      });
+                          })
+                          .eq('id', p.dbId);
                       
                       p.level = newLevel;
                       p.xp = newXp;
                   }
-              } catch (e) { console.error("Prisma Error:", e); }
+              } catch (e) { console.error("Supabase Error:", e); }
           }
       }
 
@@ -181,7 +192,7 @@ app.prepare().then(() => {
     let socketLobby = null;
 
     // Lobby System
-    socket.on('join_lobby', async ({ lobbyId, username }) => {
+    socket.on('join_lobby', async ({ lobbyId, username, userId }) => {
         socketLobby = lobbyId;
         socket.join(lobbyId);
         
@@ -192,9 +203,15 @@ app.prepare().then(() => {
         
         // Fetch DB data
         let userData = { level: 1, xp: 0, dbId: null };
-        if (username) {
+        const queryId = userId || username;
+        if (queryId) {
             try {
-                const dbUser = await prisma.user.findUnique({ where: { username } });
+                const { data: dbUser } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq(userId ? 'id' : 'username', queryId)
+                    .single();
+                
                 if (dbUser) {
                     userData = { level: dbUser.level, xp: dbUser.xp, dbId: dbUser.id };
                 }
