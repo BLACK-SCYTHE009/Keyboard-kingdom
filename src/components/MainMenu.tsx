@@ -79,7 +79,7 @@ export default function MainMenu({ session }: { session: MainMenuSession }) {
       <div className="absolute right-6 top-6 z-[60]">
         <button
           onClick={() => setSettingsOpen(true)}
-          className="stone-panel flex h-12 w-12 items-center justify-center rounded-lg text-[9px] text-gray-300 shadow-lg transition-colors hover:scale-110 hover:text-gold active:scale-95"
+          className="stone-panel flex h-12 w-12 items-center justify-center rounded-lg text-xs font-bold text-gray-300 shadow-lg transition-colors hover:scale-110 hover:text-gold active:scale-95"
           title="Settings"
         >
           SET
@@ -114,10 +114,10 @@ export default function MainMenu({ session }: { session: MainMenuSession }) {
           <h1 className="blocky-border bg-black/80 px-8 py-4 text-center text-4xl text-epic-gold md:text-6xl">
             KEYBOARD <br /> KINGDOM
           </h1>
-          <div className="stone-panel mt-4 flex items-center gap-2 rounded px-6 py-2 text-xs text-white shadow-2xl">
+          <div className="stone-panel mt-4 flex items-center gap-2 rounded px-6 py-2 text-sm text-white shadow-2xl">
             <span>Greetings,</span>
             <span className="text-gold">{displayName}</span>
-            <span className="text-[9px] text-gray-300">LVL {session.user?.level || 1}</span>
+            <span className="text-xs text-gray-300">LVL {session.user?.level || 1}</span>
           </div>
         </div>
 
@@ -134,7 +134,7 @@ export default function MainMenu({ session }: { session: MainMenuSession }) {
               </span>
               <div className="flex flex-1 flex-col items-start">
                 <span className="text-sm font-bold tracking-widest">{button.label}</span>
-                <span className="mt-0.5 text-[9px] text-gray-300">{button.desc}</span>
+                <span className="mt-0.5 text-xs text-gray-300">{button.desc}</span>
               </div>
               <span className="ml-auto text-xl text-white/50 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gold">&gt;</span>
             </button>
@@ -142,7 +142,7 @@ export default function MainMenu({ session }: { session: MainMenuSession }) {
 
           <button
             onClick={() => signOut({ redirectUrl: "/" })}
-            className="mc-btn blocky-border fade-in-up mx-auto mt-6 bg-red-900 px-8 py-2 text-[10px] text-white transition-all duration-300 hover:bg-red-800"
+            className="mc-btn blocky-border fade-in-up mx-auto mt-6 bg-red-900 px-8 py-2 text-xs font-bold text-white transition-all duration-300 hover:bg-red-800"
             style={{ "--delay": "0.7s" } as React.CSSProperties}
           >
             LOGOUT

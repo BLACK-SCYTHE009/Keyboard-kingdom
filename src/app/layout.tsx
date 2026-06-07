@@ -12,7 +12,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="h-screen w-screen overflow-hidden bg-[#0d1117] font-pixel text-white antialiased">
+        <body className="h-screen w-screen overflow-hidden bg-[#0d1117] font-sans text-white antialiased">
           <SettingsProvider>{children}</SettingsProvider>
         </body>
       </html>

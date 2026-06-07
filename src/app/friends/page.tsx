@@ -2,13 +2,21 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { addAcceptedFriend, listFriends } from "@/lib/profiles";
+import DatabaseSetupScreen from "@/components/DatabaseSetupScreen";
+import { addAcceptedFriend, getProfileStoreErrorMessage, isProfileStoreError, listFriends } from "@/lib/profiles";
 
 export default async function FriendsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/");
 
-  const friends = await listFriends(userId);
+  let friends;
+  try {
+    friends = await listFriends(userId);
+  } catch (error) {
+    if (!isProfileStoreError(error)) throw error;
+    console.error("Friends store error:", error);
+    return <DatabaseSetupScreen message={getProfileStoreErrorMessage(error)} />;
+  }
 
   async function addFriend(formData: FormData) {
     "use server";

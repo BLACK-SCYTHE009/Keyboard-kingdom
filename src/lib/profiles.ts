@@ -44,6 +44,15 @@ export type ProfileInput = {
 
 export type FriendProfile = Pick<UserProfile, "id" | "username" | "displayName" | "level" | "avatar">;
 
+const PROFILE_STORE_ERROR_PREFIXES = [
+  "Could not load profile:",
+  "Could not save profile:",
+  "Could not load friends:",
+  "Could not load friend profiles:",
+  "Could not find friend:",
+  "Could not add friend:",
+];
+
 function normalizeUser(row: UserRow): UserProfile {
   return {
     id: row.id,
@@ -87,7 +96,46 @@ function profilePayload(userId: string, input: ProfileInput) {
   };
 }
 
+function readKeyboardKingdomProfile(user: User): ProfileInput | null {
+  const metadata = user.unsafeMetadata as { keyboardKingdomProfile?: unknown };
+  const profile = metadata.keyboardKingdomProfile;
+  if (!profile || typeof profile !== "object") return null;
+
+  const data = profile as Partial<Record<keyof ProfileInput, unknown>>;
+  const username = typeof data.username === "string" ? data.username.trim() : "";
+  if (!username) return null;
+
+  return {
+    username,
+    displayName: typeof data.displayName === "string" ? data.displayName : username,
+    age: typeof data.age === "string" || typeof data.age === "number" || data.age === null ? data.age : null,
+    gender: typeof data.gender === "string" ? data.gender : "other",
+    bio: typeof data.bio === "string" ? data.bio : "",
+    profilePicture: typeof data.profilePicture === "string" ? data.profilePicture : "",
+    character: typeof data.character === "string" ? data.character : "heroA",
+    avatar: typeof data.avatar === "string" ? data.avatar : "1",
+  };
+}
+
+export function getProfileStoreErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+
+  for (const prefix of PROFILE_STORE_ERROR_PREFIXES) {
+    if (message.startsWith(prefix)) return message.slice(prefix.length).trim();
+  }
+
+  return message || "The profile database could not be reached.";
+}
+
+export function isProfileStoreError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return PROFILE_STORE_ERROR_PREFIXES.some((prefix) => message.startsWith(prefix));
+}
+
 export function clerkUserToProfileInput(user: User): ProfileInput {
+  const keyboardKingdomProfile = readKeyboardKingdomProfile(user);
+  if (keyboardKingdomProfile) return keyboardKingdomProfile;
+
   const username = user.username || user.emailAddresses[0]?.emailAddress?.split("@")[0] || `user_${user.id.slice(-6)}`;
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 

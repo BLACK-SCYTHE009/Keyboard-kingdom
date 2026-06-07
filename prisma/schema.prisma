@@ -26,6 +26,7 @@ model User {
   
   messagesSent     DirectMessage[] @relation("msgSender")
   messagesReceived DirectMessage[] @relation("msgReceiver")
+  @@map("users")
 }
 
 model Friend {
@@ -39,6 +40,7 @@ model Friend {
   friend User @relation("friendReceiver", fields: [friendId], references: [id])
 
   @@unique([userId, friendId])
+  @@map("friends")
 }
 
 model DirectMessage {
@@ -50,6 +52,7 @@ model DirectMessage {
 
   sender   User @relation("msgSender", fields: [senderId], references: [id])
   receiver User @relation("msgReceiver", fields: [receiverId], references: [id])
+  @@map("direct_messages")
 }
 
 

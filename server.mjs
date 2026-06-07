@@ -6,12 +6,12 @@ import { createClient } from '@supabase/supabase-js';
 import nextEnv from '@next/env';
 
 const { loadEnvConfig } = nextEnv;
-loadEnvConfig(process.cwd());
+const dev = process.env.NODE_ENV !== 'production';
+loadEnvConfig(process.cwd(), dev);
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
 

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { upsertUserProfile } from "@/lib/profiles";
+import { getProfileStoreErrorMessage, isProfileStoreError, upsertUserProfile } from "@/lib/profiles";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -32,6 +32,14 @@ export async function POST(req: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     console.error("Profile upsert error:", error);
+
+    if (isProfileStoreError(error)) {
+      return NextResponse.json(
+        { error: `Supabase setup needed: ${getProfileStoreErrorMessage(error)}. Run supabase-schema.sql in the Supabase SQL Editor.` },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
