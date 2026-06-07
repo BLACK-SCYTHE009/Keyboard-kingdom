@@ -23,7 +23,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": [
-    "iad1",
-    "sin1"
+    "iad1"
   ]
 }
